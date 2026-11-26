@@ -1,0 +1,5 @@
+<Bindings>
+    <Binding name="TIERLIST_TOGGLE" header="TIERLIST">
+        TierList_Toggle()
+    </Binding>
+</Bindings>

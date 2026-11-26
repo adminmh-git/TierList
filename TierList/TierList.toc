@@ -1,0 +1,33 @@
+## Interface: 16001
+## Title: |cff33ff99TierList|r
+## Notes: Your own S/A/B/C tier lists per gear slot, for any build and character. Shows where items drop, marks them in tooltips and tells you to roll Need. /tl
+## Author: adminmh-git
+## Version: 0.9.0
+## X-Website: https://github.com/adminmh-git/TierList
+## SavedVariables: TierListDB
+## OptionalDeps: EllesmereUI
+## IconTexture: Interface\Icons\INV_Misc_Note_05
+## AddonCompartmentFunc: TierList_OnAddonCompartmentClick
+
+Libs\LibStub\LibStub.lua
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
+Libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
+Libs\LibDBIcon-1.0\LibDBIcon-1.0.lua
+
+Data\Items.lua
+Data\Picks.lua
+Data\Seed.lua
+Data\SeedGrayston.lua
+Data\SeedAlacor.lua
+Data\SeedJurdi.lua
+Data\SeedConquestCapped.lua
+Data\SeedWowheadDisc.lua
+Core.lua
+Spec.lua
+Skin.lua
+Import.lua
+Tooltip.lua
+Alerts.lua
+UI.lua
+Minimap.lua
+Version.lua
