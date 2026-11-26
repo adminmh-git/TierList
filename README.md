@@ -23,6 +23,7 @@ New versions then appear under **My Addons** like any other addon. Click **Updat
 ## Using it
 
 - `/tl` or the minimap button opens the window. Each gear slot lists its items by tier.
+- **Which lists count for a character.** In the **List** menu, tick the box next to a list to use it for the character you are playing: its items then show up in tooltips, loot alerts and the dungeon pop-up. Click a list's name to just look at it. The **Use for ...** box at the bottom of the window does the same for the list that is shown.
 - **Tooltips** show an item's tier on your lists and where it comes from: boss and dungeon, quest, vendor and cost, crafting, or Auction House for BoE items.
 - **Loot alerts.** When an item from your list drops in a group, a banner tells you to roll Need. Offspec lists say "Greed" instead.
 - **Main spec and offspec.** Each list can be tied to a talent tree. Edit the list to set this, and use `/tl spec` to check what the addon detected.

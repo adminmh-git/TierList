@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.1
+
+- Opening a list no longer makes it count for your character. Before, every list you looked at showed up in your tooltips and loot alerts.
+- The List menu has a box next to each list. Tick it to use the list for your current character (tooltips, NEED banner, dungeon pop-up); click the name to just show the list. Lists of another class say so, for example "Druid list".
+- New "Use for <character>" box at the bottom of the window, for the list that is shown.
+- One-time clean-up at your next login: lists of another class that only got tied to a character because it opened them are taken off that character. The chat says which ones.
+- Lists you import as a new list count for you right away if they are for your class.
+
 ## 0.9.0
 
 - First public release on GitHub. Install and update with WowUp-CF (**Get Addons > Install from URL**), or download the zip.

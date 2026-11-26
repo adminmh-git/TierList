@@ -2,7 +2,7 @@
 -- Core: saved data, lists, item facts, equipped/owned state, upgrade logic, events, slash commands.
 local ADDON, TL = ...
 _G.TierList = TL
-TL.VERSION = "0.9.0"
+TL.VERSION = "0.9.1"
 BINDING_HEADER_TIERLIST = "TierList"
 BINDING_NAME_TIERLIST_TOGGLE = "Open / close TierList"
 
@@ -453,32 +453,50 @@ function TL:GetActiveList()
     return self:GetList(self.db.active[self.charKey])
 end
 
+-- The active list is the one shown in the window (and the target of /tl add). Showing a list does NOT
+-- make it count for the character any more (0.9.1): that is list.chars, ticked in the List menu, the
+-- "Use for" box in the window or the Edit dialog.
 function TL:SetActiveList(id)
     local list = self:GetList(id)
     if not list then
         return
     end
     self.db.active[self.charKey] = id
-    list.chars[self.charKey] = true
     self:Changed()
 end
 
--- Lists that belong to this character, the active one first.
+-- Does this list count for the character (tooltips, NEED banner, dungeon pop-up)?
+function TL:UsesList(list, key)
+    return list and list.chars and list.chars[key or self.charKey] and true or false
+end
+
+function TL:SetListUsed(list, on, key)
+    if not list then
+        return
+    end
+    list.chars = list.chars or {}
+    list.chars[key or self.charKey] = on and true or nil
+    self:Changed()
+end
+
+-- Lists that count for this character, the shown one first.
 function TL:ListsForChar(key)
     key = key or self.charKey
     local out, active = {}, self.db.active[key]
-    if active and self.db.lists[active] then
-        out[1] = self.db.lists[active]
+    local shown = active and self.db.lists[active]
+    if shown and shown.chars[key] then
+        out[1] = shown
     end
     for _, l in ipairs(self:SortedLists()) do
-        if l.id ~= active and l.chars[key] then
+        if l ~= shown and l.chars[key] then
             out[#out + 1] = l
         end
     end
     return out
 end
 
--- Picks an active list for a character that has none: one assigned to it, else an unassigned one of its class.
+-- Picks a list to show for a character that has none: one it uses, else an unused one of its class,
+-- which then also counts for it (a new character starts with a working list).
 function TL:EnsureActive()
     if self.db.active[self.charKey] and self.db.lists[self.db.active[self.charKey]] then
         return
@@ -492,9 +510,57 @@ function TL:EnsureActive()
     end
     for _, l in ipairs(self:SortedLists()) do
         if l.class == self.playerClass and next(l.chars) == nil then
+            l.chars[self.charKey] = true
             self:SetActiveList(l.id)
             return
         end
+    end
+end
+
+-- Up to 0.9.0 just opening a list in the window tied it to the character. Once per character: lists
+-- of another class are taken off it, and the window goes back to a list it really uses.
+function TL:FixShownLists()
+    self.db.usedFixed = self.db.usedFixed or {}
+    if self.db.usedFixed[self.charKey] then
+        return
+    end
+    self.db.usedFixed[self.charKey] = true
+    local removed = {}
+    for _, l in ipairs(self:SortedLists()) do
+        if l.chars[self.charKey] and l.class and self.playerClass and l.class ~= self.playerClass then
+            l.chars[self.charKey] = nil
+            removed[#removed + 1] = "\"" .. l.name .. "\""
+        end
+    end
+    local shown = self:GetActiveList()
+    if shown and not shown.chars[self.charKey] then
+        local pick
+        -- the list a ready-made list switched this character to, else a main spec list, else any used one
+        for _, seed in ipairs(self.Seeds or {}) do
+            local done = seed.id and seed.activate and self.db.seedsDone and self.db.seedsDone[seed.id]
+            local l = done and done.chars and done.chars[self.charKey] and self:GetList(done.list)
+            if not pick and l and l.chars[self.charKey] then
+                pick = l
+            end
+        end
+        for _, l in ipairs(self:SortedLists()) do
+            if not pick and l.chars[self.charKey] and not (self.IsOffspec and self:IsOffspec(l)) then
+                pick = l
+            end
+        end
+        for _, l in ipairs(self:SortedLists()) do
+            if not pick and l.chars[self.charKey] then
+                pick = l
+            end
+        end
+        if pick then
+            self.db.active[self.charKey] = pick.id
+        end
+    end
+    if #removed > 0 then
+        TL.Print("opening a list no longer makes it count for a character. Taken off " ..
+            self:CharLabel(self.charKey) .. " (other class): " .. table.concat(removed, ", ") ..
+            ". Tick lists in the List menu to use them.")
     end
 end
 
@@ -1397,6 +1463,7 @@ TL:On("PLAYER_LOGIN", function()
     end
     TL:RegisterChar()
     TL:ApplySeeds()
+    TL:FixShownLists()
     TL:EnsureActive()
     TL:RefreshEquipped()
     if TL.Tooltip and TL.Tooltip.Hook then
@@ -1566,7 +1633,8 @@ SlashCmdList["TIERLIST"] = function(msg)
         for _, l in ipairs(TL:SortedLists()) do
             if l.name:lower() == want then
                 TL:SetActiveList(l.id)
-                TL.Print("active list: " .. l.name)
+                TL.Print("showing list: " .. l.name .. (TL:UsesList(l) and "" or
+                    (" (does not count for " .. TL:CharLabel(TL.charKey) .. " - tick it in the List menu)")))
                 return
             end
         end

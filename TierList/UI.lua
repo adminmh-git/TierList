@@ -216,6 +216,40 @@ local function MenuButton(i)
     b.text:SetPoint("LEFT", 18, 0)
     b.text:SetJustifyH("LEFT")
     Skin.Apply("Font", b.text)
+    -- entries with a toggle get their own small check box on the left: the box toggles (menu stays
+    -- open), the rest of the row runs entry.func as usual
+    local box = CreateFrame("Button", nil, b)
+    box:SetSize(16, 16)
+    box:SetPoint("LEFT", 1, 0)
+    box.border = box:CreateTexture(nil, "BACKGROUND")
+    box.border:SetSize(14, 14)
+    box.border:SetPoint("CENTER")
+    box.border:SetColorTexture(0.55, 0.55, 0.55, 0.9)
+    box.fill = box:CreateTexture(nil, "BORDER")
+    box.fill:SetSize(12, 12)
+    box.fill:SetPoint("CENTER")
+    box.fill:SetColorTexture(0.06, 0.06, 0.06, 1)
+    box.check = box:CreateTexture(nil, "ARTWORK")
+    box.check:SetSize(16, 16)
+    box.check:SetPoint("CENTER")
+    SetTex(box.check, "Interface\\Buttons\\UI-CheckBox-Check")
+    box.check:SetDesaturated(true)
+    box:SetScript("OnClick", function(self)
+        local entry = b.entry
+        if entry and entry.toggle then
+            TL.Safe("menu", entry.toggle)
+        end
+    end)
+    box:SetScript("OnEnter", function(self)
+        local entry = b.entry
+        if entry and entry.toggleTip then
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetText(entry.toggleTip, 1, 1, 1, 1, true)
+            GameTooltip:Show()
+        end
+    end)
+    box:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    b.box = box
     b:SetScript("OnClick", function(self)
         local entry = self.entry
         if not entry or entry.isTitle or entry.disabled then
@@ -274,10 +308,21 @@ function UI:ShowMenu(anchor, entries)
                 b.text:SetTextColor(0.5, 0.5, 0.5)
             else
                 b:Enable()
-                b.text:SetTextColor(1, 1, 1)
+                if entry.current then
+                    b.text:SetTextColor(Skin.Accent())
+                else
+                    b.text:SetTextColor(1, 1, 1)
+                end
             end
         end
-        b.check:SetShown(entry.checked and true or false)
+        b.box:SetShown(entry.toggle ~= nil)
+        if entry.toggle then
+            b.check:Hide()
+            b.box.check:SetVertexColor(Skin.Accent())
+            b.box.check:SetShown(entry.checked and true or false)
+        else
+            b.check:SetShown(entry.checked and true or false)
+        end
         b:Show()
         width = math.max(width, b.text:GetStringWidth() + 34)
     end
@@ -521,9 +566,32 @@ function UI:Create()
         end
         addBox:ClearFocus()
     end)
-    local hint = Label(f, GREY .. "Right-click a row for more|r", "GameFontDisableSmall")
-    hint:SetPoint("LEFT", addBtn, "RIGHT", 10, 0)
-    hint:SetPoint("RIGHT", f, "RIGHT", -16, 0)
+    -- does the shown list count for this character? (0.9.1: showing a list no longer decides that)
+    local use = CreateFrame("CheckButton", nil, f, "UICheckButtonTemplate")
+    use:SetSize(22, 22)
+    use:SetPoint("LEFT", addBtn, "RIGHT", 12, 0)
+    Skin.Apply("Checkbox", use)
+    use.label = use.Text or use.text or use:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    if not (use.Text or use.text) then
+        use.label:SetPoint("LEFT", use, "RIGHT", 2, 0)
+    end
+    Skin.Apply("Font", use.label)
+    use:SetScript("OnClick", function(self)
+        local list = TL:GetActiveList()
+        if list then
+            TL:SetListUsed(list, self:GetChecked())
+        end
+    end)
+    use:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_TOP")
+        GameTooltip:SetText("Use this list for " .. TL:CharLabel(TL.charKey), 1, 1, 1)
+        GameTooltip:AddLine("Ticked: its items show in tooltips, the NEED banner and the dungeon pop-up for this character. " ..
+            "Unticked: you can still look at it and edit it. The List menu has the same box for every list.", nil, nil, nil, true)
+        GameTooltip:Show()
+    end)
+    use:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    self.useCheck = use
+    Tip(addBox, "Add an item", "Type a name, ID or item link, or Shift-click / drag an item here. Right-click a row in the list for tier, move, copy and remove.")
     self:UpdateTierPick()
     f:Hide()
     return f
@@ -857,6 +925,12 @@ function UI:Refresh()
     end
     local list = TL:GetActiveList()
     self.listBtn:SetText(list and ("List: " .. list.name) or "List: (none)")
+    if self.useCheck then
+        local used = TL:UsesList(list)
+        self.useCheck:SetChecked(used)
+        self.useCheck:SetShown(list ~= nil)
+        self.useCheck.label:SetText((used and "" or GREY) .. "Use for " .. TL:CharLabel(TL.charKey) .. (used and "" or "|r"))
+    end
     if self.scope == "all" then
         self.scopeAll:LockHighlight()
         self.scopeList:UnlockHighlight()
@@ -1002,18 +1076,38 @@ function UI:ShowItemMenu(anchor, d)
     self:ShowMenu(anchor, entries)
 end
 
+-- Box = the list counts for this character (tooltips, NEED, pop-up); name = show it in the window.
 function UI:ShowListMenu(anchor)
     local active = TL:GetActiveList()
-    local entries = { { text = "Lists (" .. TL:CharLabel(TL.charKey) .. ")", isTitle = true } }
+    local me = TL:CharLabel(TL.charKey)
+    local entries = { { text = "Ticked = used by " .. me .. "; click a name to show it", isTitle = true } }
     for _, l in ipairs(TL:SortedLists()) do
-        local chars = {}
+        local others = {}
         for key in pairs(l.chars) do
-            chars[#chars + 1] = TL:CharLabel(key)
+            if key ~= TL.charKey then
+                others[#others + 1] = TL:CharLabel(key)
+            end
         end
-        local extra = TL:CountItems(l) .. " items" .. (#chars > 0 and (", " .. table.concat(chars, ", ")) or "")
+        table.sort(others)
+        local extra = { TL:CountItems(l) .. " items" }
+        if l.class and l.class ~= TL.playerClass then
+            table.insert(extra, 1, (TL.CLASS_NAMES[l.class] or l.class) .. " list")
+        end
+        if #others > 0 then
+            extra[#extra + 1] = "also " .. table.concat(others, ", ")
+        end
+        local used = TL:UsesList(l)
         entries[#entries + 1] = {
-            text = l.name .. GREY .. "  (" .. extra .. ")|r" .. (l.chars[TL.charKey] and TL:IsOffspec(l) and "|cff59a6ff offspec|r" or ""),
-            checked = (l == active),
+            text = l.name .. (used and TL:IsOffspec(l) and "|cff59a6ff offspec|r" or "") ..
+                GREY .. "  (" .. table.concat(extra, ", ") .. ")|r",
+            checked = used,
+            current = (l == active),
+            toggle = function()
+                TL:SetListUsed(l, not used)
+                UI:ShowListMenu(anchor)
+            end,
+            toggleTip = used and ("Stop using this list for " .. me .. ".")
+                or ("Use this list for " .. me .. ": tooltips, NEED banner and dungeon pop-up."),
             func = function()
                 TL:SetActiveList(l.id)
             end,
@@ -1424,21 +1518,14 @@ function UI:SaveEdit()
     list.spec = f.spec ~= "any" and f.spec or nil
     list.specSeeded = true
     list.modified = time()
-    local wasActive = TL.db.active[TL.charKey] == list.id
+    -- the boxes only say which characters use the list; what the window shows stays as it is
     for _, cb in ipairs(f.checks) do
         if cb:IsShown() and cb.key then
             list.chars[cb.key] = cb:GetChecked() and true or nil
-            if not cb:GetChecked() and TL.db.active[cb.key] == list.id then
-                TL.db.active[cb.key] = nil
-            end
         end
     end
-    if not f.list and list.chars[TL.charKey] then
-        TL:SetActiveList(list.id)
-    elseif wasActive and not list.chars[TL.charKey] then
-        TL:EnsureActive()
-    elseif not TL:GetActiveList() and list.chars[TL.charKey] then
-        TL:SetActiveList(list.id)
+    if not f.list or not TL:GetActiveList() then
+        TL:SetActiveList(list.id) -- a new list is shown right away
     end
     f:Hide()
     TL:Changed()
@@ -1582,6 +1669,9 @@ function UI:DoImport(dryRun)
             name = (res.meta and res.meta.name) or "Imported"
         end
         list = TL:CreateList(name, res.meta and res.meta.class or TL.playerClass, res.meta and res.meta.build or "")
+        if not list.class or list.class == TL.playerClass then
+            list.chars[TL.charKey] = true -- an imported list of your own class counts for you right away
+        end
         TL:SetActiveList(list.id)
     else
         list = TL:GetActiveList()
