@@ -2,7 +2,7 @@
 ## Title: |cff33ff99TierList|r
 ## Notes: Your own S/A/B/C tier lists per gear slot, for any build and character. Shows where items drop, marks them in tooltips and tells you to roll Need. /tl
 ## Author: adminmh-git
-## Version: 0.9.5
+## Version: 0.9.6
 ## X-Website: https://github.com/adminmh-git/TierList
 ## SavedVariables: TierListDB
 ## OptionalDeps: EllesmereUI
@@ -21,6 +21,8 @@ Data\SeedGrayston.lua
 Data\SeedAlacor.lua
 Data\SeedJurdi.lua
 Data\SeedConquestCapped.lua
+Data\SeedConquestCappedFeralTank.lua
+Data\SeedConquestCappedFeral.lua
 Data\SeedWowheadDisc.lua
 Data\SeedWowheadHolyPaladin.lua
 Data\Enchants.lua

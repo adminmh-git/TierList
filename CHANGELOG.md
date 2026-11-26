@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.6
+
+- Two new Druid lists from ConquestCapped's guides by Kir: "Feral Tank (ConquestCapped pre-raid)" with 56 items, for the Bear Tank build, and "Feral Cat (ConquestCapped pre-raid)" with 75 items. As in the Balance list, the BiS set is S, the realistic set A, and the other options follow the guide's order. Neither list is ticked for any character. Tick them in the **List** menu to use them.
+- Both lists show the enchants from ConquestCapped's Feral Druid and Feral Tank Druid enchant guides. The Feral guide names a cheaper option for every slot. The Feral Tank guide names a threat option instead, which the hover shows as "For threat". There, the cheaper option is TierList's own pick: Greater Defense on the cloak, Rugged Armor Kit instead of Wild Leather Armor Kit, and Deflection on the bracers.
+- Lesser Arcanum of Voracity comes in five versions with the same name (Strength, Agility, Stamina, Intellect, Spirit). TierList now shows which one is meant, for example "Voracity (Strength)" in the slot header, and the hover, icon and chat link use that version. Before, the hover of the healer and Shockadin lists showed the Strength version.
+- Dire Warbear Harness and Dire Warbear Woolies (Meilosh, Felwood) are now in the item data, taken from QuestieDB.
+
 ## 0.9.5
 
 - Cheaper enchants for every list. Where a guide names no cheaper enchant, TierList picks the same kind of stat one step smaller. For example, Greater Spellpower (16) becomes Spell Power (12), Spellblasting (65) becomes Mighty Spell Power (55), and Healing Power bracers (24) become Lesser Healing Power (16). The hover says "Picked by TierList" so you can tell these picks from the guide's own.

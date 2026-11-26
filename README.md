@@ -24,7 +24,7 @@ New versions then appear under **My Addons** like any other addon. Click **Updat
 
 - `/tl` or the minimap button opens the window. Each gear slot lists its items by tier.
 - **Which lists count for a character.** In the **List** menu, tick the box next to a list to use it for the character you are playing: its items then show up in tooltips, loot alerts and the dungeon pop-up. Click a list's name to just look at it, and hover it for details. The **Use for ...** box at the bottom of the window does the same for the list that is shown. List names are in their class colour, so you can tell a Druid list (orange) from a Paladin list (pink) at a glance.
-- **Enchants.** Ready-made lists show the guide's best enchant next to each slot name, and a cheaper option after a coin and "cheaper:". The cheaper option is the guide's own where it names one, otherwise TierList picks the same kind of stat one step smaller, and the hover says so. Hover either one for details, click it to search the Auction House (Auctionator or Blizzard's search), and shift-click it to link it in chat.
+- **Enchants.** Ready-made lists show the guide's best enchant next to each slot name, and a cheaper option after a coin and "cheaper:". The cheaper option is the guide's own where it names one, otherwise TierList picks the same kind of stat one step smaller, and the hover says so. Hover either one for details and the guide's other options, such as a threat enchant for tanks. Click it to search the Auction House (Auctionator or Blizzard's search), and shift-click it to link it in chat.
 - **Tooltips** show an item's tier on the lists you use and where it comes from: boss and dungeon, quest, vendor and cost, crafting, or Auction House for BoE items.
 - **Loot alerts.** When an item from your list drops in a group, a banner tells you to roll Need. Offspec lists say "Greed" instead.
 - **Main spec and offspec.** Each list can be tied to a talent tree. Edit the list to set this, and use `/tl spec` to check what the addon detected.
@@ -47,6 +47,8 @@ A character with no list yet gets one ready-made list of its class. All other li
 | Prot Tank (Jurdi pre-raid) | Paladin, Protection | Jurdi's Prot Paladin pre-raid video (YouTube) |
 | Holy Healer (Wowhead pre-raid) | Paladin, Holy | Wowhead "Holy Paladin Healer Best in Slot Gear" by Harreks |
 | Balance (ConquestCapped pre-raid) | Druid, Balance | ConquestCapped "WoW Forever Balance Druid Pre-Raid BiS" by Kir |
+| Feral Tank (ConquestCapped pre-raid) | Druid, Feral (Bear Tank) | ConquestCapped "WoW Forever Feral Tank Druid Pre-Raid BiS" by Kir |
+| Feral Cat (ConquestCapped pre-raid) | Druid, Feral | ConquestCapped "WoW Forever Feral Druid Pre-Raid BiS" by Kir |
 | Discipline (Wowhead pre-raid) | Priest, Discipline | Wowhead "Discipline Priest Healer Best in Slot Gear" by Voulk |
 
 Tiers follow each guide's own ranking. The item notes in tooltips quote the guide.

@@ -82,12 +82,34 @@ function Enchant.Short(name)
     return name:match("^Enchant [^-]+ %- (.+)$") or name
 end
 
--- Item link for chat (once the item is cached), else the plain name.
-function Enchant.Link(name)
+-- The item behind an enchant (an entry or a name): the entry's own item where one name has several
+-- (Lesser Arcanum of Voracity, one per stat, 0.9.6), else the enchant's formula, kit or Arcanum.
+function Enchant.ItemOf(e)
+    local name = type(e) == "table" and e[1] or e
     local info = TL.EnchantDB and TL.EnchantDB[name]
+    return (type(e) == "table" and e.item) or (info and info.item) or nil
+end
+
+-- the name with its stat where one name has several items: "Lesser Arcanum of Voracity (Strength)"
+function Enchant.FullName(e)
+    return e[1] .. (e.variant and (" (" .. e.variant .. ")") or "")
+end
+
+-- header text: the short form; a Voracity variant as "Voracity (Strength)", so best and cheaper fit the row
+function Enchant.Label(e)
+    if e.variant then
+        return (e[1]:match("^Lesser Arcanum of (.+)$") or Enchant.Short(e[1])) .. " (" .. e.variant .. ")"
+    end
+    return Enchant.Short(e[1])
+end
+
+-- Item link for chat (once the item is cached), else the plain name. Takes an entry or a name.
+function Enchant.Link(e)
+    local name = type(e) == "table" and Enchant.FullName(e) or e
+    local item = Enchant.ItemOf(e)
     local fn = (C_Item and C_Item.GetItemInfo) or GetItemInfo
-    if info and info.item and fn then
-        local ok, _, link = pcall(fn, info.item)
+    if item and fn then
+        local ok, _, link = pcall(fn, item)
         if ok and type(link) == "string" then
             return link
         end
@@ -102,10 +124,11 @@ function Enchant.Tooltip(tt, list, slotKey, entry)
     if not entry then
         return
     end
-    local name = entry[1]
-    local info = TL.EnchantDB and TL.EnchantDB[name] or {}
-    if info.item then
-        tt:SetHyperlink("item:" .. info.item)
+    local name = Enchant.FullName(entry)
+    local info = TL.EnchantDB and TL.EnchantDB[entry[1]] or {}
+    local item = Enchant.ItemOf(entry)
+    if item then
+        tt:SetHyperlink("item:" .. item)
     elseif info.spell and tt.SetSpellByID then
         tt:SetSpellByID(info.spell)
     else
@@ -124,15 +147,16 @@ function Enchant.Tooltip(tt, list, slotKey, entry)
     end
     for _, e in ipairs(Enchant.ForSlot(list, slotKey)) do
         if e == best and e ~= entry then
-            tt:AddLine("Best: " .. e[1] .. (e[2] and (GREY .. " - " .. e[2] .. "|r") or ""), 0.85, 0.85, 0.85, true)
+            tt:AddLine("Best: " .. Enchant.FullName(e) .. (e[2] and (GREY .. " - " .. e[2] .. "|r") or ""), 0.85, 0.85, 0.85, true)
         elseif e ~= entry then
             local kind = e.hand == "2H" and "two-hander" or e.hand == "1H" and "one-hander" or nil
-            local tag = e.cheap and (e.own and "Cheaper (TierList's pick)" or "Cheaper") or e.alt and "Or"
+            local tag = e.cheap and (e.own and "Cheaper (TierList's pick)" or "Cheaper")
+                or e.threat and "For threat" or e.alt and "Or"
                 or (kind and (kind:gsub("^%l", string.upper))) or "Also"
             if kind and (e.cheap or e.alt) then
                 tag = tag .. " (" .. kind .. ")"
             end
-            tt:AddLine(tag .. ": " .. e[1] .. (e[2] and (GREY .. " - " .. e[2] .. "|r") or ""), 0.85, 0.85, 0.85, true)
+            tt:AddLine(tag .. ": " .. Enchant.FullName(e) .. (e[2] and (GREY .. " - " .. e[2] .. "|r") or ""), 0.85, 0.85, 0.85, true)
         end
     end
     local src = Enchant.ForList(list)
@@ -202,11 +226,25 @@ function Enchant.Preload()
     if not load or not TL.EnchantDB then
         return 0
     end
-    local n = 0
-    for _, info in pairs(TL.EnchantDB) do
-        if info.item then
-            pcall(load, info.item)
+    local seen, n = {}, 0
+    local function req(item)
+        if item and not seen[item] then
+            seen[item] = true
+            pcall(load, item)
             n = n + 1
+        end
+    end
+    for _, info in pairs(TL.EnchantDB) do
+        req(info.item)
+    end
+    -- the entries' own items (the Lesser Arcanum of Voracity per stat)
+    for _, slots in pairs(TL.SeedEnchants or {}) do
+        for _, entries in pairs(slots) do
+            if type(entries) == "table" then
+                for _, e in ipairs(entries) do
+                    req(e.item)
+                end
+            end
         end
     end
     return n

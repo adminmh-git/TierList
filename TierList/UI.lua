@@ -749,7 +749,7 @@ local function EnchantButton(r, pick)
             return
         end
         if IsModifiedClick("CHATLINK") then
-            InsertChatLink(TL.Enchant.Link(e[1]))
+            InsertChatLink(TL.Enchant.Link(e))
         else
             TL.Enchant.Search(e[1])
         end
@@ -915,9 +915,8 @@ function UI:SetHeader(r, d)
     r.wornText:SetPoint("RIGHT", -6, 0)
     local cheap = best and TL.Enchant.Cheap(d.list, d.slot.key)
     if best then
-        local info = TL.EnchantDB and TL.EnchantDB[best[1]] or {}
-        r.ench.text:SetText(TL.Enchant.COLOR .. TL.Enchant.Short(best[1]) .. "|r")
-        r.ench.icon:SetTexture(ItemIcon(info.item) or "Interface\\Icons\\Trade_Engraving")
+        r.ench.text:SetText(TL.Enchant.COLOR .. TL.Enchant.Label(best) .. "|r")
+        r.ench.icon:SetTexture(ItemIcon(TL.Enchant.ItemOf(best)) or "Interface\\Icons\\Trade_Engraving")
         r.ench:SetWidth(18 + r.ench.text:GetStringWidth())
         r.ench:Show()
     else
@@ -925,7 +924,7 @@ function UI:SetHeader(r, d)
     end
     if cheap then
         -- coin + "cheaper:" so it reads as the budget pick, not a second enchant on the same slot
-        r.cheap.text:SetText(GREY .. "cheaper:|r " .. TL.Enchant.CHEAP_COLOR .. TL.Enchant.Short(cheap[1]) .. "|r")
+        r.cheap.text:SetText(GREY .. "cheaper:|r " .. TL.Enchant.CHEAP_COLOR .. TL.Enchant.Label(cheap) .. "|r")
         r.cheap.icon:SetTexture("Interface\\Icons\\INV_Misc_Coin_01")
         r.cheap:SetWidth(18 + r.cheap.text:GetStringWidth())
         r.cheap:Show()
