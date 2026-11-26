@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.3
+
+- Enchants. Each ready-made list shows the best enchant for each slot next to the slot name, for example "Arcanum of Focus" on Head and Legs. The enchants come from the same guide as the list: Grayston's sheet, Alacor's and Jurdi's videos, the Wowhead guides, ConquestCapped's Balance Druid enchant guide and the wowsims set.
+- Hover an enchant to see what it does, the guide's own words, and other options the guide names, such as a cheaper enchant or the staff enchant.
+- Click an enchant to search the Auction House for it. For an Arcanum it searches the Libram as well, and for an enchanting formula it searches the formula. If the Auction House is closed, the search starts when you open it. It uses Auctionator if you have it, otherwise Blizzard's search box. Shift-click links the enchant in chat.
+- The **List** button keeps long list names inside the button (cut off with "..."). Hover it to see the full name and the list's details.
+
 ## 0.9.2
 
 - New list "Holy Healer (Wowhead pre-raid)" for Paladins, from Wowhead's Holy Paladin BiS guide by Harreks. It has 62 items. Its notes give vendor prices in gold or Tarnished Undermine Real, and mark the two-hand weapons; the guide's BiS set uses a one-hander and an off hand.

@@ -475,6 +475,27 @@ function UI:Create()
     local listBtn = Btn(f, "List", 180)
     listBtn:SetPoint("TOPLEFT", 14, -30)
     listBtn:SetScript("OnClick", function(self) UI:ShowListMenu(self) end)
+    -- a long list name stays inside the button, cut with "..." (0.9.3); hovering shows the whole name
+    local lfs = listBtn.GetFontString and listBtn:GetFontString()
+    if lfs then
+        lfs:ClearAllPoints()
+        lfs:SetPoint("LEFT", 8, 0)
+        lfs:SetPoint("RIGHT", -8, 0)
+        lfs:SetJustifyH("LEFT")
+        lfs:SetWordWrap(false)
+        if lfs.SetMaxLines then
+            lfs:SetMaxLines(1)
+        end
+    end
+    listBtn:HookScript("OnEnter", function(self)
+        local l = TL:GetActiveList()
+        if l then
+            GameTooltip:SetOwner(self, "ANCHOR_BOTTOMLEFT")
+            UI.ListTip(l)(GameTooltip)
+            GameTooltip:Show()
+        end
+    end)
+    listBtn:HookScript("OnLeave", function() GameTooltip:Hide() end)
     self.listBtn = listBtn
     local newBtn = Btn(f, "New", 58)
     newBtn:SetPoint("LEFT", listBtn, "RIGHT", 6, 0)
@@ -715,6 +736,39 @@ local function CreateRow(content)
     r.headText = r:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     r.headText:SetPoint("LEFT", r.toggle, "RIGHT", 6, 0)
     r.headText:SetJustifyH("LEFT")
+    -- best enchant of the slot on ready-made lists (0.9.3): hover = the enchant, click = AH search,
+    -- shift-click = link in chat
+    r.ench = CreateFrame("Button", nil, r)
+    r.ench:SetHeight(HEAD_H - 4)
+    r.ench:SetPoint("LEFT", r.headText, "RIGHT", 14, 0)
+    r.ench:RegisterForClicks("LeftButtonUp")
+    r.ench.icon = r.ench:CreateTexture(nil, "ARTWORK")
+    r.ench.icon:SetSize(14, 14)
+    r.ench.icon:SetPoint("LEFT", 0, 0)
+    r.ench.text = r.ench:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    r.ench.text:SetPoint("LEFT", r.ench.icon, "RIGHT", 4, 0)
+    r.ench.text:SetWordWrap(false)
+    r.ench:SetScript("OnEnter", function(self)
+        local d = r.data
+        if d and d.list and d.slot then
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            TL.Safe("enchant tooltip", TL.Enchant.Tooltip, GameTooltip, d.list, d.slot.key)
+            GameTooltip:Show()
+        end
+    end)
+    r.ench:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    r.ench:SetScript("OnClick", function()
+        local d = r.data
+        local best = d and d.list and d.slot and TL.Enchant.Best(d.list, d.slot.key)
+        if not best then
+            return
+        end
+        if IsModifiedClick("CHATLINK") then
+            InsertChatLink(TL.Enchant.Link(best[1]))
+        else
+            TL.Enchant.Search(best[1])
+        end
+    end)
     r.wornText = r:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     r.wornText:SetPoint("RIGHT", -6, 0)
     r.wornText:SetPoint("LEFT", r.headText, "RIGHT", 10, 0)
@@ -786,10 +840,19 @@ local function CreateRow(content)
     for _, k in ipairs({ "headText", "wornText", "hintText", "place", "name", "source", "state" }) do
         Skin.Apply("Font", r[k])
     end
+    Skin.Apply("Font", r.ench.text)
     return r
 end
 
-local HEADER_PARTS = { "toggle", "headText", "wornText", "hintText", "rule" }
+local HEADER_PARTS = { "toggle", "headText", "ench", "wornText", "hintText", "rule" }
+
+local function ItemIcon(id)
+    local fn = (C_Item and C_Item.GetItemIconByID) or GetItemIcon
+    if id and fn then
+        local ok, icon = pcall(fn, id)
+        return ok and icon or nil
+    end
+end
 local ITEM_PARTS = { "place", "tierBtn", "iconFrame", "name", "source", "state", "up", "down", "del", "add" }
 
 local function ShowParts(r, parts, show)
@@ -821,6 +884,7 @@ function UI:SetHeader(r, d)
         r.toggle:Hide()
         r.rule:Hide()
         r.headText:Hide()
+        r.ench:Hide()
         r.wornText:Hide()
         r.hintText:SetText(d.text)
         return
@@ -833,6 +897,21 @@ function UI:SetHeader(r, d)
     local count = d.count > 0 and (GREY .. " (" .. d.count .. ")|r") or (GREY .. "  - drop an item here|r")
     r.headText:SetText(d.slot.label .. count)
     r.wornText:SetText(WornText(d.list, d.slot))
+    -- the guide's enchant for this slot sits between the slot name and "worn:"
+    local best = d.list and TL.Enchant.Best(d.list, d.slot.key)
+    r.wornText:ClearAllPoints()
+    r.wornText:SetPoint("RIGHT", -6, 0)
+    if best then
+        local info = TL.EnchantDB and TL.EnchantDB[best[1]] or {}
+        r.ench.text:SetText(TL.Enchant.COLOR .. TL.Enchant.Short(best[1]) .. "|r")
+        r.ench.icon:SetTexture(ItemIcon(info.item) or "Interface\\Icons\\Trade_Engraving")
+        r.ench:SetWidth(18 + r.ench.text:GetStringWidth())
+        r.ench:Show()
+        r.wornText:SetPoint("LEFT", r.ench, "RIGHT", 10, 0)
+    else
+        r.ench:Hide()
+        r.wornText:SetPoint("LEFT", r.headText, "RIGHT", 10, 0)
+    end
 end
 
 function UI:SetItem(r, d)
