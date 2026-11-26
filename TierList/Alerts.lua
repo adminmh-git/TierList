@@ -158,7 +158,7 @@ function Alerts.ShowBanner(id, hit, context)
     else
         wornText = "not an upgrade, you wear " .. (hit.wornId and (TL:ColoredName(hit.wornId) .. " " .. (worn and TL.TierText(worn.tier) or "")) or "?")
     end
-    banner.sub:SetText(hit.list.name .. OffTag(hit) .. GREY .. " - |r" .. wornText)
+    banner.sub:SetText(TL:ListName(hit.list) .. OffTag(hit) .. GREY .. " - |r" .. wornText)
     banner.left = 9
     banner:SetAlpha(1)
     banner:Show()
@@ -200,7 +200,7 @@ TL:On("START_LOOT_ROLL", function(rollID)
     Alerts.ShowBanner(id, hit, "roll")
     local lead = (hit.upgrade and not hit.offspec and "|cffff8000NEED|r on ") or
         (hit.offspec and (OFF .. "GREED|r (offspec) on ")) or "on your list: "
-    ChatLine(lead .. TL:ItemLink(id) .. " - " .. TL.TierText(hit.entry.tier) .. " in " .. hit.list.name ..
+    ChatLine(lead .. TL:ItemLink(id) .. " - " .. TL.TierText(hit.entry.tier) .. " in " .. TL:ListName(hit.list) ..
         (hit.upgrade and "" or " (not an upgrade)"))
 end)
 
@@ -218,7 +218,7 @@ TL:On("LOOT_OPENED", function()
         local hit = Alerts.Match(id)
         if hit and not Throttled("loot" .. id, 20) then
             Alerts.ShowBanner(id, hit, "in loot")
-            ChatLine("in the loot: " .. TL:ItemLink(id) .. " - " .. TL.TierText(hit.entry.tier) .. " in " .. hit.list.name .. OffTag(hit))
+            ChatLine("in the loot: " .. TL:ItemLink(id) .. " - " .. TL.TierText(hit.entry.tier) .. " in " .. TL:ListName(hit.list) .. OffTag(hit))
         end
     end
 end)
@@ -251,14 +251,14 @@ TL:On("CHAT_MSG_LOOT", function(msg)
     end
     if mine then
         if not Throttled("got" .. id, 5) then
-            ChatLine(GREEN .. "got it!|r " .. TL:ItemLink(id) .. " - " .. TL.TierText(hit.entry.tier) .. " in " .. hit.list.name)
+            ChatLine(GREEN .. "got it!|r " .. TL:ItemLink(id) .. " - " .. TL.TierText(hit.entry.tier) .. " in " .. TL:ListName(hit.list))
         end
         TL:Changed()
     else
         local who = msg:match("^(%S+)")
         if who and not Throttled("other" .. id, 5) then
             ChatLine(GREY .. who .. " got|r " .. TL:ItemLink(id) .. GREY .. " (your " .. "|r" ..
-                TL.TierText(hit.entry.tier) .. GREY .. " in " .. hit.list.name .. ")|r")
+                TL.TierText(hit.entry.tier) .. GREY .. " in " .. TL:ListName(hit.list) .. GREY .. ")|r")
         end
     end
 end)
@@ -352,7 +352,7 @@ function Alerts.ShowInstancePopup(instanceName, hits)
         local who = d and d[7]
         local rate = d and d[8]
         local state = TL:ItemState(h.id) == "owned" and (GREEN .. " (have it)|r") or ""
-        local off = h.offspec and (OFF .. "  offspec: " .. h.list.name .. "|r") or ""
+        local off = h.offspec and (OFF .. "  offspec:|r " .. TL:ListName(h.list, OFF)) or ""
         b.text:SetText(TL.TierText(h.entry.tier) .. " " .. TL:ColoredName(h.id) .. state .. GREY .. "  " ..
             (who or "") .. (rate and string.format(" %.0f%%", rate) or "") .. "|r" .. off)
         b:Show()
@@ -444,7 +444,7 @@ function Alerts:Test()
         end
     end
     if not pick then
-        TL.Print("every item on " .. list.name .. " is already equipped.")
+        TL.Print("every item on " .. TL:ListName(list) .. " is already equipped.")
         return
     end
     local up, wornId = TL:UpgradeInfo(list, pick.id)

@@ -45,6 +45,16 @@ local function Input(parent, w)
     return eb
 end
 
+-- A checkbox's label with a clear gap to the box. UICheckButtonTemplate puts its text 2 px inside the
+-- button's right edge, and EllesmereUI draws the box 4 px inset, so it looked glued to the box (0.9.2).
+local LABEL_GAP = 6
+local function PlaceLabel(cb, label)
+    label:ClearAllPoints()
+    label:SetPoint("LEFT", cb, "RIGHT", LABEL_GAP, 0)
+    return label
+end
+UI.PlaceLabel = PlaceLabel
+
 local function Check(parent, text)
     local cb = CreateFrame("CheckButton", nil, parent, "UICheckButtonTemplate")
     cb:SetSize(22, 22)
@@ -52,9 +62,9 @@ local function Check(parent, text)
     cb.label = cb.Text or cb.text
     if not cb.label then
         cb.label = parent:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-        cb.label:SetPoint("LEFT", cb, "RIGHT", 2, 0)
         Skin.Apply("Font", cb.label)
     end
+    PlaceLabel(cb, cb.label)
     cb.label:SetText(text or "")
     return cb
 end
@@ -199,6 +209,8 @@ end
 -- Small popup menu
 -- ---------------------------------------------------------------------------
 local menu
+-- text starts after the 14 px box / check with about 9 px air (was 1 px before 0.9.2)
+local MENU_TEXT_X = 26
 local function MenuButton(i)
     local b = menu.buttons[i]
     if b then
@@ -207,20 +219,25 @@ local function MenuButton(i)
     b = CreateFrame("Button", nil, menu)
     b:SetHeight(18)
     Skin.Apply("Highlight", b, 0.08)
+    -- entry.current (e.g. the list shown in the window): accent tint behind the row, since the text
+    -- itself may carry a class colour
+    b.cur = b:CreateTexture(nil, "BACKGROUND")
+    b.cur:SetAllPoints()
+    b.cur:Hide()
     b.check = b:CreateTexture(nil, "ARTWORK")
     b.check:SetSize(14, 14)
-    b.check:SetPoint("LEFT", 2, 0)
+    b.check:SetPoint("LEFT", 3, 0)
     SetTex(b.check, "Interface\\Buttons\\UI-CheckBox-Check")
     b.check:SetDesaturated(true) -- tinted with the accent colour in ShowMenu
     b.text = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    b.text:SetPoint("LEFT", 18, 0)
+    b.text:SetPoint("LEFT", MENU_TEXT_X, 0)
     b.text:SetJustifyH("LEFT")
     Skin.Apply("Font", b.text)
     -- entries with a toggle get their own small check box on the left: the box toggles (menu stays
     -- open), the rest of the row runs entry.func as usual
     local box = CreateFrame("Button", nil, b)
     box:SetSize(16, 16)
-    box:SetPoint("LEFT", 1, 0)
+    box:SetPoint("LEFT", 2, 0)
     box.border = box:CreateTexture(nil, "BACKGROUND")
     box.border:SetSize(14, 14)
     box.border:SetPoint("CENTER")
@@ -250,6 +267,16 @@ local function MenuButton(i)
     end)
     box:SetScript("OnLeave", function() GameTooltip:Hide() end)
     b.box = box
+    -- entry.tip(tooltip): details on hover, so the row itself can stay short (List menu, 0.9.2)
+    b:SetScript("OnEnter", function(self)
+        local entry = self.entry
+        if entry and entry.tip then
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            TL.Safe("menu tip", entry.tip, GameTooltip)
+            GameTooltip:Show()
+        end
+    end)
+    b:SetScript("OnLeave", function() GameTooltip:Hide() end)
     b:SetScript("OnClick", function(self)
         local entry = self.entry
         if not entry or entry.isTitle or entry.disabled then
@@ -299,6 +326,9 @@ function UI:ShowMenu(anchor, entries)
         b:SetPoint("RIGHT", menu, "RIGHT", -6, 0)
         b.text:SetText(entry.text or "")
         b.check:SetVertexColor(Skin.Accent())
+        local cr, cg, cb = Skin.Accent()
+        b.cur:SetColorTexture(cr, cg, cb, 0.22)
+        b.cur:SetShown(entry.current and not entry.isTitle and true or false)
         if entry.isTitle then
             b.text:SetTextColor(Skin.Accent())
             b:Disable()
@@ -324,7 +354,7 @@ function UI:ShowMenu(anchor, entries)
             b.check:SetShown(entry.checked and true or false)
         end
         b:Show()
-        width = math.max(width, b.text:GetStringWidth() + 34)
+        width = math.max(width, b.text:GetStringWidth() + MENU_TEXT_X + 16)
     end
     for i = #entries + 1, #menu.buttons do
         menu.buttons[i]:Hide()
@@ -571,10 +601,7 @@ function UI:Create()
     use:SetSize(22, 22)
     use:SetPoint("LEFT", addBtn, "RIGHT", 12, 0)
     Skin.Apply("Checkbox", use)
-    use.label = use.Text or use.text or use:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    if not (use.Text or use.text) then
-        use.label:SetPoint("LEFT", use, "RIGHT", 2, 0)
-    end
+    use.label = PlaceLabel(use, use.Text or use.text or use:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall"))
     Skin.Apply("Font", use.label)
     use:SetScript("OnClick", function(self)
         local list = TL:GetActiveList()
@@ -924,7 +951,7 @@ function UI:Refresh()
         return
     end
     local list = TL:GetActiveList()
-    self.listBtn:SetText(list and ("List: " .. list.name) or "List: (none)")
+    self.listBtn:SetText(list and ("List: " .. TL:ListName(list)) or "List: (none)")
     if self.useCheck then
         local used = TL:UsesList(list)
         self.useCheck:SetChecked(used)
@@ -939,7 +966,7 @@ function UI:Refresh()
         self.scopeAll:UnlockHighlight()
     end
     if list then
-        local cls = list.class and TL.CLASS_NAMES[list.class] or "any class"
+        local cls = list.class and TL.ClassText(list.class) or "any class"
         self.info:SetText(TL:CountItems(list) .. " items - " .. cls .. (list.build ~= "" and (" - " .. list.build) or ""))
     else
         self.info:SetText("")
@@ -1010,7 +1037,7 @@ function UI:Remove(d)
     local list = TL:GetActiveList()
     if list and d and d.id then
         TL:RemoveItem(list, d.id)
-        TL.Print("removed " .. TL:ColoredName(d.id) .. " from " .. list.name .. ". |cffffd100/tl undo|r brings it back.")
+        TL.Print("removed " .. TL:ColoredName(d.id) .. " from " .. TL:ListName(list) .. ". |cffffd100/tl undo|r brings it back.")
         TL:Changed()
     end
 end
@@ -1023,7 +1050,7 @@ function UI:AddFromSearch(d)
     end
     if d and d.id then
         TL:AddItem(list, d.id, self.addTier)
-        TL.Print("added " .. TL:ColoredName(d.id) .. " as " .. TL.TierText(self.addTier) .. " to " .. list.name .. ".")
+        TL.Print("added " .. TL:ColoredName(d.id) .. " as " .. TL.TierText(self.addTier) .. " to " .. TL:ListName(list) .. ".")
         TL:Changed()
     end
 end
@@ -1063,10 +1090,10 @@ function UI:ShowItemMenu(anchor, d)
         for _, other in ipairs(TL:SortedLists()) do
             if other.id ~= list.id then
                 entries[#entries + 1] = {
-                    text = "Copy to " .. other.name .. (other.items[id] and (" (is " .. TL.TierText(other.items[id].tier) .. ")") or ""),
+                    text = "Copy to " .. TL:ListName(other) .. (other.items[id] and (" (is " .. TL.TierText(other.items[id].tier) .. ")") or ""),
                     func = function()
                         TL:AddItem(other, id, e.tier, e.slot)
-                        TL.Print("copied " .. TL:ColoredName(id) .. " to " .. other.name .. " as " .. TL.TierText(e.tier) .. ".")
+                        TL.Print("copied " .. TL:ColoredName(id) .. " to " .. TL:ListName(other) .. " as " .. TL.TierText(e.tier) .. ".")
                     end,
                 }
             end
@@ -1077,29 +1104,55 @@ function UI:ShowItemMenu(anchor, d)
 end
 
 -- Box = the list counts for this character (tooltips, NEED, pop-up); name = show it in the window.
+-- Hover tooltip of a list in the List / minimap menu: everything the short row leaves out.
+function UI.ListTip(l)
+    return function(tt)
+        local me = TL:CharLabel(TL.charKey)
+        tt:SetText(TL:ListName(l, "|cffffffff"), 1, 1, 1)
+        tt:AddLine((l.class and (TL.ClassText(l.class) .. " list") or "List for any class") ..
+            ", " .. TL:CountItems(l) .. " items", 1, 1, 1)
+        if l.build and l.build ~= "" then
+            tt:AddLine(l.build, 0.8, 0.8, 0.8, true)
+        end
+        if l.spec then
+            local role = ""
+            if TL:UsesList(l) then
+                role = TL:IsOffspec(l) and " |cff59a6ff- offspec for " .. me .. " now (Greed)|r"
+                    or " |cff40ff40- main spec for " .. me .. " now|r"
+            end
+            tt:AddLine("Spec: " .. TL.Spec.Label(l.spec) .. role, 1, 1, 1, true)
+        end
+        local keys = {}
+        for key in pairs(l.chars) do
+            keys[#keys + 1] = key
+        end
+        table.sort(keys, function(a, b) return TL:CharLabel(a) < TL:CharLabel(b) end)
+        local names = {}
+        for i, key in ipairs(keys) do
+            names[i] = TL:CharName(key)
+        end
+        tt:AddLine("Used by: " .. (#names > 0 and table.concat(names, ", ") or (GREY .. "nobody|r")), 1, 1, 1, true)
+        if l.note and l.note ~= "" then
+            tt:AddLine(l.note, 0.6, 0.6, 0.6, true)
+        end
+        if l == TL:GetActiveList() then
+            tt:AddLine("Shown in the window", Skin.Accent())
+        end
+        tt:AddLine("Click the name to show it, the box to use it for " .. me .. ".", 0.6, 0.6, 0.6, true)
+    end
+end
+
 function UI:ShowListMenu(anchor)
     local active = TL:GetActiveList()
     local me = TL:CharLabel(TL.charKey)
-    local entries = { { text = "Ticked = used by " .. me .. "; click a name to show it", isTitle = true } }
+    local entries = { { text = "Ticked = used by " .. TL:CharName(TL.charKey), isTitle = true } }
     for _, l in ipairs(TL:SortedLists()) do
-        local others = {}
-        for key in pairs(l.chars) do
-            if key ~= TL.charKey then
-                others[#others + 1] = TL:CharLabel(key)
-            end
-        end
-        table.sort(others)
-        local extra = { TL:CountItems(l) .. " items" }
-        if l.class and l.class ~= TL.playerClass then
-            table.insert(extra, 1, (TL.CLASS_NAMES[l.class] or l.class) .. " list")
-        end
-        if #others > 0 then
-            extra[#extra + 1] = "also " .. table.concat(others, ", ")
-        end
         local used = TL:UsesList(l)
+        -- short row (0.9.2): name in its class colour + item count; class, spec, offspec, other
+        -- characters and source are in the hover tooltip
         entries[#entries + 1] = {
-            text = l.name .. (used and TL:IsOffspec(l) and "|cff59a6ff offspec|r" or "") ..
-                GREY .. "  (" .. table.concat(extra, ", ") .. ")|r",
+            text = TL:ListName(l) .. GREY .. "  (" .. TL:CountItems(l) .. ")|r",
+            tip = UI.ListTip(l),
             checked = used,
             current = (l == active),
             toggle = function()
@@ -1198,7 +1251,7 @@ function UI:ShowFill()
             local l = TL:GetActiveList()
             if l then
                 local n = TL:RemoveFilled(l)
-                f.result:SetText(string.format("Removed %d GearQuest picks from %s. /tl undo brings them back.", n, l.name))
+                f.result:SetText(string.format("Removed %d GearQuest picks from %s. /tl undo brings them back.", n, TL:ListName(l)))
                 UI:UpdateFill()
             end
         end)
@@ -1224,7 +1277,7 @@ function UI:ShowFill()
     f.places:SetText(tostring(s.places))
     f.replace:SetChecked(s.replace and true or false)
     f.result:SetText(#specs == 0 and "|cffff5555No GearQuest data for this list's class. Set the class with Edit.|r" or "")
-    f.titleText:SetText("Fill from GearQuest: " .. list.name)
+    f.titleText:SetText("Fill from GearQuest: " .. TL:ListName(list))
     self:UpdateFill()
     f:Show()
 end
@@ -1262,7 +1315,7 @@ function UI:DoFill()
         f.result:SetText("|cffff5555" .. tostring(removed) .. "|r")
         return
     end
-    f.result:SetText(GREEN .. "Added " .. n .. " items (" .. SpecLabel(f.spec) .. ") to " .. list.name ..
+    f.result:SetText(GREEN .. "Added " .. n .. " items (" .. SpecLabel(f.spec) .. ") to " .. TL:ListName(list) .. GREEN ..
         ((removed or 0) > 0 and (", replaced " .. removed .. " earlier picks") or "") .. ".|r")
     self:UpdateFill()
 end
@@ -1281,7 +1334,6 @@ function UI:ShowOptionsMenu(anchor)
         { text = "Sound on upgrades", checked = s.sound, func = toggle("sound"), keepOpen = true },
         { text = "Chat messages", checked = s.chat, func = toggle("chat"), keepOpen = true },
         { text = "Tooltip lines", checked = s.tooltip, func = toggle("tooltip"), keepOpen = true },
-        { text = "Other characters' lists in tooltips", checked = s.tooltipOthers, func = toggle("tooltipOthers"), keepOpen = true },
         { text = "Dungeon pop-up", checked = s.popup, func = toggle("popup"), keepOpen = true },
         { text = "Minimap button", checked = TL.MinimapButton and TL.MinimapButton:IsShown(), keepOpen = true,
           func = function()
@@ -1303,11 +1355,12 @@ function UI:ShowQuickMenu(anchor)
     }
     for _, l in ipairs(TL:ListsForChar()) do
         entries[#entries + 1] = {
-            text = l.name .. GREY .. "  (" .. TL:CountItems(l) .. ")|r" .. (TL:IsOffspec(l) and "|cff59a6ff offspec|r" or ""),
+            text = TL:ListName(l) .. GREY .. "  (" .. TL:CountItems(l) .. ")|r",
+            tip = UI.ListTip(l),
             checked = (l == active),
             func = function()
                 TL:SetActiveList(l.id)
-                TL.Print("active list: " .. l.name)
+                TL.Print("active list: " .. TL:ListName(l))
             end,
         }
     end
@@ -1372,12 +1425,14 @@ function UI:ShowEdit(list)
         f.classBtn:SetScript("OnClick", function(self)
             local entries = { { text = "Any class", checked = f.class == nil, func = function()
                 f.class = nil
+                f.classTouched = true
                 f.classBtn:SetText("Any class")
             end } }
             for _, c in ipairs(TL.CLASS_ORDER) do
-                entries[#entries + 1] = { text = TL.CLASS_NAMES[c], checked = f.class == c, func = function()
+                entries[#entries + 1] = { text = TL.ClassText(c), checked = f.class == c, func = function()
                     f.class = c
-                    f.classBtn:SetText(TL.CLASS_NAMES[c])
+                    f.classTouched = true
+                    f.classBtn:SetText(TL.ClassText(c))
                 end }
             end
             UI:ShowMenu(self, entries)
@@ -1430,13 +1485,21 @@ function UI:ShowEdit(list)
         end)
         f.save:SetScript("OnClick", function() UI:SaveEdit() end)
         f.name:SetScript("OnEnterPressed", function() UI:SaveEdit() end)
+        -- a new list takes the class its name names ("Feral Bear Druid"), until a class is picked by hand
+        f.name:HookScript("OnTextChanged", function(self)
+            if not f.list and not f.classTouched then
+                f.class = TL.ClassFromName(self:GetText()) or TL.playerClass
+                f.classBtn:SetText(f.class and TL.ClassText(f.class) or "Any class")
+            end
+        end)
     end
     f.list = list
-    f.titleText:SetText(list and ("Edit list: " .. list.name) or "New list")
+    f.titleText:SetText(list and ("Edit list: " .. TL:ListName(list)) or "New list")
     f.name:SetText(list and list.name or "")
     f.build:SetText(list and list.build or "")
     f.class = list and list.class or (not list and TL.playerClass) or nil
-    f.classBtn:SetText(f.class and TL.CLASS_NAMES[f.class] or "Any class")
+    f.classTouched = false
+    f.classBtn:SetText(f.class and TL.ClassText(f.class) or "Any class")
     f.spec = list and list.spec or nil
     self:UpdateEditSpec()
     f.delete:SetShown(list ~= nil)
@@ -1460,15 +1523,12 @@ function UI:ShowEdit(list)
             Skin.Apply("Checkbox", cb)
             local col, row = (i - 1) % 2, math.floor((i - 1) / 2)
             cb:SetPoint("TOPLEFT", 18 + col * 170, f.charY - row * 22)
-            cb.label = cb.Text or cb.text or cb:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-            if not (cb.Text or cb.text) then
-                cb.label:SetPoint("LEFT", cb, "RIGHT", 2, 0)
-            end
+            cb.label = PlaceLabel(cb, cb.Text or cb.text or cb:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall"))
             f.checks[i] = cb
         end
         cb.key = key
         local c = TL.db.chars[key]
-        cb.label:SetText(TL:CharLabel(key) .. (c and c.class and (GREY .. " (" .. (TL.CLASS_NAMES[c.class] or c.class) .. ")|r") or ""))
+        cb.label:SetText(TL:CharName(key) .. (c and c.class and (GREY .. " (" .. (TL.CLASS_NAMES[c.class] or c.class) .. ")|r") or ""))
         if list then
             cb:SetChecked(list.chars[key] and true or false)
         else
@@ -1510,6 +1570,9 @@ function UI:SaveEdit()
     end
     local list = f.list
     if not list then
+        if not f.classTouched then
+            f.class = TL.ClassFromName(name) or f.class -- same rule as while typing
+        end
         list = TL:CreateList(name, f.class, TL.Trim(f.build:GetText()))
     end
     list.name = name
@@ -1574,18 +1637,12 @@ function UI:ShowImport()
         f.intoActive:SetSize(22, 22)
         Skin.Apply("Checkbox", f.intoActive)
         f.intoActive:SetPoint("TOPLEFT", 14, y + 4)
-        f.intoActiveText = f.intoActive.Text or f.intoActive.text or Label(f.intoActive, "", "GameFontHighlightSmall")
-        if not (f.intoActive.Text or f.intoActive.text) then
-            f.intoActiveText:SetPoint("LEFT", f.intoActive, "RIGHT", 2, 0)
-        end
+        f.intoActiveText = PlaceLabel(f.intoActive, f.intoActive.Text or f.intoActive.text or Label(f.intoActive, "", "GameFontHighlightSmall"))
         f.asNew = CreateFrame("CheckButton", nil, f, "UICheckButtonTemplate")
         f.asNew:SetSize(22, 22)
         Skin.Apply("Checkbox", f.asNew)
         f.asNew:SetPoint("TOPLEFT", 14, y - 18)
-        local asNewText = f.asNew.Text or f.asNew.text or Label(f.asNew, "", "GameFontHighlightSmall")
-        if not (f.asNew.Text or f.asNew.text) then
-            asNewText:SetPoint("LEFT", f.asNew, "RIGHT", 2, 0)
-        end
+        local asNewText = PlaceLabel(f.asNew, f.asNew.Text or f.asNew.text or Label(f.asNew, "", "GameFontHighlightSmall"))
         asNewText:SetText("as a new list named")
         f.newName = Input(f, 200)
         f.newName:SetPoint("LEFT", f.asNew, "RIGHT", 140, 0)
@@ -1596,10 +1653,7 @@ function UI:ShowImport()
         f.replace:SetSize(22, 22)
         Skin.Apply("Checkbox", f.replace)
         f.replace:SetPoint("TOPLEFT", 14, y - 40)
-        local replaceText = f.replace.Text or f.replace.text or Label(f.replace, "", "GameFontHighlightSmall")
-        if not (f.replace.Text or f.replace.text) then
-            replaceText:SetPoint("LEFT", f.replace, "RIGHT", 2, 0)
-        end
+        local replaceText = PlaceLabel(f.replace, f.replace.Text or f.replace.text or Label(f.replace, "", "GameFontHighlightSmall"))
         replaceText:SetText("empty that list first (replace instead of adding)")
         f.result = Label(f, "", "GameFontHighlightSmall")
         f.result:SetPoint("TOPLEFT", 18, y - 70)
@@ -1620,7 +1674,7 @@ function UI:ShowImport()
         end)
     end
     local list = TL:GetActiveList()
-    f.intoActiveText:SetText("into the active list" .. (list and (" (" .. list.name .. ")") or " (none yet)"))
+    f.intoActiveText:SetText("into the active list" .. (list and (" (" .. TL:ListName(list) .. ")") or " (none yet)"))
     f.intoActive:SetChecked(list ~= nil)
     f.asNew:SetChecked(list == nil)
     f.replace:SetChecked(false)
@@ -1677,7 +1731,7 @@ function UI:DoImport(dryRun)
         list = TL:GetActiveList()
     end
     local c = TL.Import.Apply(res, list, f.replace:GetChecked())
-    f.result:SetText(msg .. "\n" .. GREEN .. "Imported into " .. list.name .. ": " .. (c.added or 0) .. " new, " ..
+    f.result:SetText(msg .. "\n" .. GREEN .. "Imported into " .. TL:ListName(list) .. GREEN .. ": " .. (c.added or 0) .. " new, " ..
         (c.changed or 0) .. " changed tier, " .. (c.same or 0) .. " already there.|r")
     TL:Changed()
 end
@@ -1722,7 +1776,7 @@ function UI:FillExport(mode)
     if not f or not list then
         return
     end
-    f.titleText:SetText("Export: " .. list.name)
+    f.titleText:SetText("Export: " .. TL:ListName(list))
     local text
     if mode == "text" then
         text = TL.Import.PlainText(list)

@@ -7,18 +7,9 @@ local GREY = "|cff9d9d9d"
 local GREEN = "|cff40ff40"
 local YELLOW = "|cffffd100"
 
-local function ListLabel(list, ownChar)
-    if ownChar then
-        return list.name .. (TL:IsOffspec(list) and " |cff59a6ff(offspec)|r" or "")
-    end
-    local chars = {}
-    for key in pairs(list.chars) do
-        chars[#chars + 1] = TL:CharLabel(key)
-    end
-    if #chars > 0 then
-        return list.name .. " (" .. table.concat(chars, ", ") .. ")"
-    end
-    return list.name
+-- the list name in its class colour, tagged when it is an offspec list for this character
+local function ListLabel(list)
+    return TL:ListName(list) .. (TL:IsOffspec(list) and " |cff59a6ff(offspec)|r" or "")
 end
 
 -- Lines to add for an item id: { {left, right}, ... }
@@ -27,18 +18,18 @@ function Tooltip.Lines(id)
     if not db or not db.settings.tooltip then
         return nil
     end
-    local lines, shown = {}, {}
+    -- only the lists this character uses (ticked); lists of other characters stay out (0.9.2)
+    local lines = {}
     local inAnyList = false
     local mine = TL:ListsForChar()
     for i, list in ipairs(mine) do
-        shown[list.id] = true
         local e = TL:Entry(list, id)
         if e then
             inAnyList = true
             local place, slotKey = TL:PlaceInSlot(list, id)
             local slot = TL.SLOT_BY_KEY[slotKey]
             lines[#lines + 1] = {
-                "|cff33ff99TierList|r " .. ListLabel(list, true),
+                "|cff33ff99TierList|r " .. ListLabel(list),
                 TL.TierText(e.tier) .. " " .. YELLOW .. (slot and slot.label or "") .. " #" .. (place or "?") .. "|r",
             }
             if i == 1 and e.note then
@@ -56,22 +47,6 @@ function Tooltip.Lines(id)
                     local worn = wornId and TL:Entry(list, wornId)
                     lines[#lines + 1] = { GREY .. "  not an upgrade (you wear " ..
                         (worn and TL.TierText(worn.tier) or "?") .. GREY .. ")|r" }
-                end
-            end
-        end
-    end
-    if db.settings.tooltipOthers then
-        for _, list in ipairs(TL:SortedLists()) do
-            if not shown[list.id] then
-                local e = TL:Entry(list, id)
-                if e then
-                    inAnyList = true
-                    local place, slotKey = TL:PlaceInSlot(list, id)
-                    local slot = TL.SLOT_BY_KEY[slotKey]
-                    lines[#lines + 1] = {
-                        GREY .. "TierList " .. ListLabel(list, false) .. "|r",
-                        TL.TierText(e.tier) .. " " .. GREY .. (slot and slot.label or "") .. " #" .. (place or "?") .. "|r",
-                    }
                 end
             end
         end

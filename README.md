@@ -23,8 +23,8 @@ New versions then appear under **My Addons** like any other addon. Click **Updat
 ## Using it
 
 - `/tl` or the minimap button opens the window. Each gear slot lists its items by tier.
-- **Which lists count for a character.** In the **List** menu, tick the box next to a list to use it for the character you are playing: its items then show up in tooltips, loot alerts and the dungeon pop-up. Click a list's name to just look at it. The **Use for ...** box at the bottom of the window does the same for the list that is shown.
-- **Tooltips** show an item's tier on your lists and where it comes from: boss and dungeon, quest, vendor and cost, crafting, or Auction House for BoE items.
+- **Which lists count for a character.** In the **List** menu, tick the box next to a list to use it for the character you are playing: its items then show up in tooltips, loot alerts and the dungeon pop-up. Click a list's name to just look at it, and hover it for details. The **Use for ...** box at the bottom of the window does the same for the list that is shown. List names are in their class colour, so you can tell a Druid list (orange) from a Paladin list (pink) at a glance.
+- **Tooltips** show an item's tier on the lists you use and where it comes from: boss and dungeon, quest, vendor and cost, crafting, or Auction House for BoE items.
 - **Loot alerts.** When an item from your list drops in a group, a banner tells you to roll Need. Offspec lists say "Greed" instead.
 - **Main spec and offspec.** Each list can be tied to a talent tree. Edit the list to set this, and use `/tl spec` to check what the addon detected.
 - **Fill.** Adds GearQuest's ranked level-60 picks per slot to a list. You can filter them by source and quality.
@@ -36,7 +36,7 @@ The look follows EllesmereUI if you use it, and falls back to a plain flat style
 
 ## Included lists
 
-A ready-made list becomes the active list for a character of that class who has no list yet. All other lists stay available in the list menu.
+A character with no list yet gets one ready-made list of its class. All other lists are in the **List** menu: tick one to use it.
 
 | List | Class / spec | Source |
 | --- | --- | --- |
@@ -44,6 +44,7 @@ A ready-made list becomes the active list for a character of that class who has 
 | Shockadin (Alacor pre-raid) | Paladin, Holy (Shockadin) | Alacor's Shockadin pre-raid BiS video (YouTube) |
 | Shockadin | Paladin, Holy (Shockadin) | wowsims example set |
 | Prot Tank (Jurdi pre-raid) | Paladin, Protection | Jurdi's Prot Paladin pre-raid video (YouTube) |
+| Holy Healer (Wowhead pre-raid) | Paladin, Holy | Wowhead "Holy Paladin Healer Best in Slot Gear" by Harreks |
 | Balance (ConquestCapped pre-raid) | Druid, Balance | ConquestCapped "WoW Forever Balance Druid Pre-Raid BiS" by Kir |
 | Discipline (Wowhead pre-raid) | Priest, Discipline | Wowhead "Discipline Priest Healer Best in Slot Gear" by Voulk |
 

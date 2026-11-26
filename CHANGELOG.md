@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.9.2
+
+- New list "Holy Healer (Wowhead pre-raid)" for Paladins, from Wowhead's Holy Paladin BiS guide by Harreks. It has 62 items. Its notes give vendor prices in gold or Tarnished Undermine Real, and mark the two-hand weapons; the guide's BiS set uses a one-hander and an off hand.
+- The new list is not ticked for any character. Tick it in the **List** menu to use it.
+- List names are shown in their class colour everywhere: the List menu, the window, tooltips, loot banners, chat and the minimap menu. For example, Druid lists are orange and Paladin lists are pink. Class and character names in the List menu and the Edit dialog are coloured too. Lists for any class stay white.
+- In the List menu, the list shown in the window has a tinted background instead of a coloured name.
+- The List menu is shorter: each row shows only the list name and its item count. Hover a name to see the class, spec (main spec or offspec), who uses it and where it comes from.
+- Item tooltips only show the lists that are ticked for the character you play. The option "Other characters' lists in tooltips" and `/tl others` are gone.
+- More space between check boxes and their text, in the List menu and in all dialogs.
+- A new list takes the class its name mentions ("Resto Druid" becomes a Druid list), unless you pick a class yourself. Before, it always got the class of the character you were playing.
+- One-time fix at your next login: your own lists whose name mentions a different class than the one they were saved with get that class. The chat says which ones.
+
 ## 0.9.1
 
 - Opening a list no longer makes it count for your character. Before, every list you looked at showed up in your tooltips and loot alerts.

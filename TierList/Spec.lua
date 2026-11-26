@@ -287,9 +287,9 @@ function Spec.Describe()
     local main, off = {}, {}
     for _, l in ipairs(TL:ListsForChar()) do
         if TL:IsOffspec(l) then
-            off[#off + 1] = l.name
+            off[#off + 1] = TL:ListName(l)
         else
-            main[#main + 1] = l.name
+            main[#main + 1] = TL:ListName(l)
         end
     end
     local head = cur and ("spec " .. Spec.Label(cur) .. " (" .. (source or "?") ..

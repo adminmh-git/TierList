@@ -2,7 +2,7 @@
 -- Core: saved data, lists, item facts, equipped/owned state, upgrade logic, events, slash commands.
 local ADDON, TL = ...
 _G.TierList = TL
-TL.VERSION = "0.9.1"
+TL.VERSION = "0.9.2"
 BINDING_HEADER_TIERLIST = "TierList"
 BINDING_NAME_TIERLIST_TOGGLE = "Open / close TierList"
 
@@ -67,12 +67,56 @@ local CLASS_NAMES = {
 TL.CLASS_NAMES = CLASS_NAMES
 TL.CLASS_ORDER = { "DRUID", "HUNTER", "MAGE", "PALADIN", "PRIEST", "ROGUE", "SHAMAN", "WARLOCK", "WARRIOR" }
 
+-- Class colours (0.9.2): the game's own (CUSTOM_CLASS_COLORS from a class colour addon, else
+-- RAID_CLASS_COLORS), these values only if the client has neither.
+local CLASS_HEX = {
+    WARRIOR = "ffc69b6d", PALADIN = "fff48cba", HUNTER = "ffaad372", ROGUE = "fffff468", PRIEST = "ffffffff",
+    SHAMAN = "ff0070dd", MAGE = "ff3fc7eb", WARLOCK = "ff8788ee", DRUID = "ffff7c0a",
+}
+
+-- "ffrrggbb" for a class file name, nil for none / unknown
+function TL.ClassHex(class)
+    if not class then
+        return nil
+    end
+    local c = (type(CUSTOM_CLASS_COLORS) == "table" and CUSTOM_CLASS_COLORS[class])
+        or (type(RAID_CLASS_COLORS) == "table" and RAID_CLASS_COLORS[class])
+    if type(c) == "table" then
+        if type(c.colorStr) == "string" and #c.colorStr == 8 then
+            return c.colorStr
+        end
+        if type(c.r) == "number" then
+            local function b(v) return math.floor(math.max(0, math.min(1, v or 1)) * 255 + 0.5) end
+            return string.format("ff%02x%02x%02x", b(c.r), b(c.g), b(c.b))
+        end
+    end
+    return CLASS_HEX[class]
+end
+
+-- text (default: the class name) in the class colour; plain text without a class
+function TL.ClassText(class, text)
+    text = text or (class and (CLASS_NAMES[class] or class)) or ""
+    local hex = TL.ClassHex(class)
+    return hex and ("|c" .. hex .. text .. "|r") or text
+end
+
+-- a list's name in its class colour; lists for any class get `plain` (a "|cff..." code) or none
+function TL:ListName(list, plain)
+    if not list then
+        return ""
+    end
+    local hex = TL.ClassHex(list.class)
+    if hex then
+        return "|c" .. hex .. (list.name or "") .. "|r"
+    end
+    return plain and (plain .. (list.name or "") .. "|r") or (list.name or "")
+end
+
 local DEFAULT_SETTINGS = {
     alerts = true,        -- banner on loot rolls / loot window
     sound = true,         -- sound with an upgrade banner
     chat = true,          -- chat line with alerts and loot
-    tooltip = true,       -- TierList lines in item tooltips
-    tooltipOthers = true, -- also show other characters' lists in tooltips
+    tooltip = true,       -- TierList lines in item tooltips (only lists the character uses, since 0.9.2)
     popup = true,         -- "drops here" pop-up when entering a dungeon or raid
 }
 
@@ -393,6 +437,12 @@ function TL:CharLabel(key)
     return (tostring(key):gsub("%-$", ""))
 end
 
+-- a character's name in its class colour
+function TL:CharName(key)
+    local c = self.db.chars[key]
+    return TL.ClassText(c and c.class, self:CharLabel(key))
+end
+
 function TL:RegisterChar()
     local name = Plain(UnitName("player")) or "?"
     local realm = Plain(GetRealmName and GetRealmName()) or ""
@@ -517,6 +567,49 @@ function TL:EnsureActive()
     end
 end
 
+-- The one class a list name names, as a whole word ("Feral Bear Druid" -> DRUID); nil for none or several.
+function TL.ClassFromName(name)
+    local words = " " .. tostring(name or ""):lower():gsub("[^%a]", " ") .. " "
+    local found
+    for class, label in pairs(CLASS_NAMES) do
+        if words:find(" " .. label:lower() .. " ", 1, true) then
+            if found then
+                return nil
+            end
+            found = class
+        end
+    end
+    return found
+end
+
+-- 0.9.2, once: the New dialog used to preset the player's class, so a "Feral Bear Druid" list made on
+-- a Paladin was a Paladin list (and pink). Own lists whose name names one other class get that class.
+function TL:FixClassFromName()
+    if self.db.classFromName then
+        return
+    end
+    self.db.classFromName = true
+    for _, l in ipairs(self:SortedLists()) do
+        local c = not l.seedId and l.class and TL.ClassFromName(l.name)
+        if c and c ~= l.class then
+            local was = l.class
+            l.class = c
+            -- a tree of the old class means nothing for the new one
+            if l.spec and l.spec ~= "off" and l.spec ~= "any" and TL.Spec then
+                local ok = false
+                for _, k in ipairs(TL.Spec.Options(c)) do
+                    ok = ok or k == l.spec
+                end
+                if not ok then
+                    l.spec = nil
+                end
+            end
+            TL.Print("\"" .. self:ListName(l) .. "\" is a " .. TL.ClassText(c) .. " list now (its name says so; it was saved as a " ..
+                TL.ClassText(was) .. " list). Edit changes it back.")
+        end
+    end
+end
+
 -- Up to 0.9.0 just opening a list in the window tied it to the character. Once per character: lists
 -- of another class are taken off it, and the window goes back to a list it really uses.
 function TL:FixShownLists()
@@ -529,7 +622,7 @@ function TL:FixShownLists()
     for _, l in ipairs(self:SortedLists()) do
         if l.chars[self.charKey] and l.class and self.playerClass and l.class ~= self.playerClass then
             l.chars[self.charKey] = nil
-            removed[#removed + 1] = "\"" .. l.name .. "\""
+            removed[#removed + 1] = "\"" .. self:ListName(l) .. "\""
         end
     end
     local shown = self:GetActiveList()
@@ -599,7 +692,7 @@ function TL:ApplySeeds()
     for _, seed in ipairs(self.Seeds) do
         if seed.id and not self.db.seedsDone[seed.id] then
             self.db.seedsDone[seed.id] = { list = create(seed).id, v = seed.version }
-            TL.Print("new list \"" .. seed.name .. "\" (" .. (seed.build or "") .. ").")
+            TL.Print("new list \"" .. TL.ClassText(seed.class, seed.name) .. "\" (" .. (seed.build or "") .. ").")
         end
         -- once per character of the seed's class: make it the active list if that character still
         -- uses an older seed list (or none); switching back later is respected
@@ -613,12 +706,12 @@ function TL:ApplySeeds()
                 if seed.assign and not seed.activate then
                     -- counts for this character (tooltips, alerts, dungeon pop-up), the active list stays
                     list.chars[self.charKey] = true
-                    TL.Print("\"" .. list.name .. "\" now counts for this character too (" ..
+                    TL.Print("\"" .. TL:ListName(list) .. "\" now counts for this character too (" ..
                         TL.Spec.Label(list.spec) .. "; Edit removes it).")
                 elseif not cur or (cur.note and cur.note ~= list.note and not cur.seedId and cur.note:find("wowsims", 1, true)) then
                     list.chars[self.charKey] = true
                     self.db.active[self.charKey] = list.id
-                    TL.Print("active list is now \"" .. list.name .. "\"" .. (cur and (" (was \"" .. cur.name .. "\", still there)") or "") .. ".")
+                    TL.Print("active list is now \"" .. TL:ListName(list) .. "\"" .. (cur and (" (was \"" .. TL:ListName(cur) .. "\", still there)") or "") .. ".")
                 end
             end
         end
@@ -651,7 +744,7 @@ function TL:ApplySeeds()
             end
             done.v = seed.version
             if n > 0 then
-                TL.Print(string.format("added %d items to \"%s\" (update of the list).", n, list.name))
+                TL.Print(string.format("added %d items to \"%s\" (update of the list).", n, TL:ListName(list)))
             end
         end
     end
@@ -680,7 +773,7 @@ function TL:ApplySeeds()
                     local n = self:FillFromPicks(list, seed.fill)
                     if n > 0 then
                         TL.Print(string.format("added %d GearQuest picks (%s) to \"%s\". /tl unfill removes them.",
-                            n, seed.fill, list.name))
+                            n, seed.fill, TL:ListName(list)))
                     end
                 end
             end
@@ -753,10 +846,10 @@ function TL:Undo()
             list.items[id] = e
             n = n + 1
         end
-        TL.Print("restored " .. n .. " items to " .. list.name .. ".")
+        TL.Print("restored " .. n .. " items to " .. TL:ListName(list) .. ".")
     else
         list.items[u.id] = u.entry
-        TL.Print("restored " .. self:ColoredName(u.id) .. " to " .. list.name .. ".")
+        TL.Print("restored " .. self:ColoredName(u.id) .. " to " .. TL:ListName(list) .. ".")
     end
     self.undo = nil
     self:Changed()
@@ -1415,9 +1508,9 @@ function TL:AddFromText(text, tier)
     for _, id in ipairs(ids) do
         local res = self:AddItem(list, id, tier)
         if res == "added" then
-            TL.Print("added " .. self:ColoredName(id) .. " as " .. TL.TierText(tier) .. " to " .. list.name .. ".")
+            TL.Print("added " .. self:ColoredName(id) .. " as " .. TL.TierText(tier) .. " to " .. TL:ListName(list) .. ".")
         elseif res == "changed" then
-            TL.Print(self:ColoredName(id) .. " is now " .. TL.TierText(tier) .. " in " .. list.name .. ".")
+            TL.Print(self:ColoredName(id) .. " is now " .. TL.TierText(tier) .. " in " .. TL:ListName(list) .. ".")
         else
             TL.Print(self:ColoredName(id) .. " is already " .. TL.TierText(tier) .. ".")
         end
@@ -1463,6 +1556,7 @@ TL:On("PLAYER_LOGIN", function()
     end
     TL:RegisterChar()
     TL:ApplySeeds()
+    TL:FixClassFromName()
     TL:FixShownLists()
     TL:EnsureActive()
     TL:RefreshEquipped()
@@ -1565,7 +1659,6 @@ local SETTING_CMDS = {
     sound = { "sound", "alert sound" },
     chat = { "chat", "chat messages" },
     tooltip = { "tooltip", "tooltip lines" },
-    others = { "tooltipOthers", "other characters' lists in tooltips" },
     popup = { "popup", "dungeon pop-up" },
 }
 
@@ -1582,7 +1675,7 @@ local function Help()
         "/tl test - show a test alert",
         "/tl minimap - show or hide the minimap button",
         "/tl version - your version and whether a newer one is out",
-        "/tl alerts | sound | chat | tooltip | others | popup - switch options on/off",
+        "/tl alerts | sound | chat | tooltip | popup - switch options on/off",
     }
     for _, l in ipairs(lines) do
         TL.Print("  " .. l)
@@ -1623,9 +1716,9 @@ SlashCmdList["TIERLIST"] = function(msg)
         for _, l in ipairs(TL:SortedLists()) do
             local chars = {}
             for key in pairs(l.chars) do
-                chars[#chars + 1] = TL:CharLabel(key)
+                chars[#chars + 1] = TL:CharName(key)
             end
-            TL.Print((l == active and "> " or "  ") .. l.name .. " (" .. TL:CountItems(l) .. " items" ..
+            TL.Print((l == active and "> " or "  ") .. TL:ListName(l) .. " (" .. TL:CountItems(l) .. " items" ..
                 (#chars > 0 and (", " .. table.concat(chars, ", ")) or "") .. ")")
         end
     elseif cmd == "use" then
@@ -1633,7 +1726,7 @@ SlashCmdList["TIERLIST"] = function(msg)
         for _, l in ipairs(TL:SortedLists()) do
             if l.name:lower() == want then
                 TL:SetActiveList(l.id)
-                TL.Print("showing list: " .. l.name .. (TL:UsesList(l) and "" or
+                TL.Print("showing list: " .. TL:ListName(l) .. (TL:UsesList(l) and "" or
                     (" (does not count for " .. TL:CharLabel(TL.charKey) .. " - tick it in the List menu)")))
                 return
             end
@@ -1657,7 +1750,7 @@ SlashCmdList["TIERLIST"] = function(msg)
         end
         local n, removed = TL:FillFromPicks(list, spec, { places = tonumber(count), replace = TL:FillSettings().replace })
         if n then
-            TL.Print(string.format("added %d GearQuest picks (%s) to %s%s.", n, spec, list.name,
+            TL.Print(string.format("added %d GearQuest picks (%s) to %s%s.", n, spec, TL:ListName(list),
                 (removed or 0) > 0 and (", replaced " .. removed .. " earlier ones") or ""))
         else
             TL.Print(removed)
@@ -1666,7 +1759,7 @@ SlashCmdList["TIERLIST"] = function(msg)
         local list = TL:GetActiveList()
         if list then
             local n = TL:RemoveFilled(list)
-            TL.Print(n > 0 and string.format("removed %d GearQuest picks from %s. /tl undo brings them back.", n, list.name)
+            TL.Print(n > 0 and string.format("removed %d GearQuest picks from %s. /tl undo brings them back.", n, TL:ListName(list))
                 or "this list has no GearQuest picks (items you re-tiered or moved count as yours).")
         end
     elseif cmd == "spec" then

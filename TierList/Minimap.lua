@@ -50,7 +50,7 @@ function Button.FillTooltip(tt)
     tt:AddLine("TierList " .. GREY .. TL.VERSION .. "|r")
     local list = TL:GetActiveList()
     if list then
-        tt:AddLine("List: " .. YELLOW .. list.name .. "|r " .. GREY .. "(" .. TL:CountItems(list) .. " items)|r", 1, 1, 1)
+        tt:AddLine("List: " .. TL:ListName(list, YELLOW) .. " " .. GREY .. "(" .. TL:CountItems(list) .. " items)|r", 1, 1, 1)
     else
         tt:AddLine("No list yet - open the window and make one.", 1, 1, 1)
     end
