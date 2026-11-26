@@ -2,7 +2,7 @@
 -- Core: saved data, lists, item facts, equipped/owned state, upgrade logic, events, slash commands.
 local ADDON, TL = ...
 _G.TierList = TL
-TL.VERSION = "0.9.4"
+TL.VERSION = "0.9.5"
 BINDING_HEADER_TIERLIST = "TierList"
 BINDING_NAME_TIERLIST_TOGGLE = "Open / close TierList"
 

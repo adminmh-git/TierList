@@ -56,8 +56,9 @@ function Enchant.Best(list, slotKey)
     return entries[1]
 end
 
--- The guide's cheaper option for the slot (0.9.4), for the same kind of weapon as the best pick; nil when
--- the guide names none. Shown next to the best enchant with a coin and "cheaper:".
+-- The cheaper option for the slot (0.9.4), for the same kind of weapon as the best pick: the guide's own,
+-- else TierList's pick of the same stat one step smaller (own = true, 0.9.5); nil when there is none.
+-- Shown next to the best enchant with a coin and "cheaper:".
 function Enchant.Cheap(list, slotKey)
     local best = Enchant.Best(list, slotKey)
     if not best then
@@ -117,12 +118,17 @@ function Enchant.Tooltip(tt, list, slotKey, entry)
     if entry[2] then
         tt:AddLine("  " .. entry[2], 0.85, 0.85, 0.85, true)
     end
+    if entry.own then
+        tt:AddLine("  Picked by TierList: the guide names no cheaper enchant, so this is the same kind of stat, one step smaller.",
+            0.6, 0.6, 0.6, true)
+    end
     for _, e in ipairs(Enchant.ForSlot(list, slotKey)) do
         if e == best and e ~= entry then
             tt:AddLine("Best: " .. e[1] .. (e[2] and (GREY .. " - " .. e[2] .. "|r") or ""), 0.85, 0.85, 0.85, true)
         elseif e ~= entry then
             local kind = e.hand == "2H" and "two-hander" or e.hand == "1H" and "one-hander" or nil
-            local tag = e.cheap and "Cheaper" or e.alt and "Or" or (kind and (kind:gsub("^%l", string.upper))) or "Also"
+            local tag = e.cheap and (e.own and "Cheaper (TierList's pick)" or "Cheaper") or e.alt and "Or"
+                or (kind and (kind:gsub("^%l", string.upper))) or "Also"
             if kind and (e.cheap or e.alt) then
                 tag = tag .. " (" .. kind .. ")"
             end

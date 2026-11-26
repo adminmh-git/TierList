@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.5
+
+- Cheaper enchants for every list. Where a guide names no cheaper enchant, TierList picks the same kind of stat one step smaller. For example, Greater Spellpower (16) becomes Spell Power (12), Spellblasting (65) becomes Mighty Spell Power (55), and Healing Power bracers (24) become Lesser Healing Power (16). The hover says "Picked by TierList" so you can tell these picks from the guide's own.
+- Head: Lesser Arcanum of Voracity, because there is no smaller spell damage Arcanum (Stamina for the tank list, Intellect or Spirit for healers). Legs: Mystic Rugged Armor Kit. Hands and feet with a Mystic Rugged Armor Kit: Mystic Thick Armor Kit.
+- No cheaper pick where nothing smaller of the same kind exists: the necklace enchants, Chromatic Mantle of the Dawn, Crusader, the shield block enchant, Minor Speed and Off-Hand Wisdom.
+- The ConquestCapped lists (Balance Druid, Discipline Priest) keep the guide's own cheaper options, including the slots where the guide says no cheaper enchant is worth it.
+
 ## 0.9.4
 
 - Cheaper enchants. Where a guide names a cheaper option for a slot, it is shown next to the best enchant, with a coin icon and "cheaper:", for example "Subtlety  cheaper: Greater Resistance". It works like the best enchant: hover for details, click to search the Auction House, shift-click to link it. For weapons, the cheaper option matches the weapon type (one-hander or staff).
