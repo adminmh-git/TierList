@@ -718,6 +718,45 @@ local function RowOnClick(self, button)
     end
 end
 
+-- One enchant at a slot header; pick(list, slotKey) returns the entry it shows (best or cheaper).
+local function EnchantButton(r, pick)
+    local b = CreateFrame("Button", nil, r)
+    b:SetHeight(HEAD_H - 4)
+    b:RegisterForClicks("LeftButtonUp")
+    b.icon = b:CreateTexture(nil, "ARTWORK")
+    b.icon:SetSize(14, 14)
+    b.icon:SetPoint("LEFT", 0, 0)
+    b.text = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    b.text:SetPoint("LEFT", b.icon, "RIGHT", 4, 0)
+    b.text:SetWordWrap(false)
+    Skin.Apply("Font", b.text)
+    local function entry()
+        local d = r.data
+        return d and d.list and d.slot and pick(d.list, d.slot.key), d
+    end
+    b:SetScript("OnEnter", function(self)
+        local e, d = entry()
+        if e then
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            TL.Safe("enchant tooltip", TL.Enchant.Tooltip, GameTooltip, d.list, d.slot.key, e)
+            GameTooltip:Show()
+        end
+    end)
+    b:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    b:SetScript("OnClick", function()
+        local e = entry()
+        if not e then
+            return
+        end
+        if IsModifiedClick("CHATLINK") then
+            InsertChatLink(TL.Enchant.Link(e[1]))
+        else
+            TL.Enchant.Search(e[1])
+        end
+    end)
+    return b
+end
+
 local function CreateRow(content)
     local r = CreateFrame("Button", nil, content)
     r:RegisterForClicks("LeftButtonUp", "RightButtonUp")
@@ -736,39 +775,12 @@ local function CreateRow(content)
     r.headText = r:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     r.headText:SetPoint("LEFT", r.toggle, "RIGHT", 6, 0)
     r.headText:SetJustifyH("LEFT")
-    -- best enchant of the slot on ready-made lists (0.9.3): hover = the enchant, click = AH search,
-    -- shift-click = link in chat
-    r.ench = CreateFrame("Button", nil, r)
-    r.ench:SetHeight(HEAD_H - 4)
+    -- enchants of the slot on ready-made lists: the guide's best (0.9.3) and, after a coin and "cheaper:",
+    -- its cheaper option (0.9.4). Hover = the enchant, click = AH search, shift-click = link in chat.
+    r.ench = EnchantButton(r, TL.Enchant.Best)
     r.ench:SetPoint("LEFT", r.headText, "RIGHT", 14, 0)
-    r.ench:RegisterForClicks("LeftButtonUp")
-    r.ench.icon = r.ench:CreateTexture(nil, "ARTWORK")
-    r.ench.icon:SetSize(14, 14)
-    r.ench.icon:SetPoint("LEFT", 0, 0)
-    r.ench.text = r.ench:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    r.ench.text:SetPoint("LEFT", r.ench.icon, "RIGHT", 4, 0)
-    r.ench.text:SetWordWrap(false)
-    r.ench:SetScript("OnEnter", function(self)
-        local d = r.data
-        if d and d.list and d.slot then
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            TL.Safe("enchant tooltip", TL.Enchant.Tooltip, GameTooltip, d.list, d.slot.key)
-            GameTooltip:Show()
-        end
-    end)
-    r.ench:SetScript("OnLeave", function() GameTooltip:Hide() end)
-    r.ench:SetScript("OnClick", function()
-        local d = r.data
-        local best = d and d.list and d.slot and TL.Enchant.Best(d.list, d.slot.key)
-        if not best then
-            return
-        end
-        if IsModifiedClick("CHATLINK") then
-            InsertChatLink(TL.Enchant.Link(best[1]))
-        else
-            TL.Enchant.Search(best[1])
-        end
-    end)
+    r.cheap = EnchantButton(r, TL.Enchant.Cheap)
+    r.cheap:SetPoint("LEFT", r.ench, "RIGHT", 12, 0)
     r.wornText = r:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     r.wornText:SetPoint("RIGHT", -6, 0)
     r.wornText:SetPoint("LEFT", r.headText, "RIGHT", 10, 0)
@@ -840,11 +852,10 @@ local function CreateRow(content)
     for _, k in ipairs({ "headText", "wornText", "hintText", "place", "name", "source", "state" }) do
         Skin.Apply("Font", r[k])
     end
-    Skin.Apply("Font", r.ench.text)
     return r
 end
 
-local HEADER_PARTS = { "toggle", "headText", "ench", "wornText", "hintText", "rule" }
+local HEADER_PARTS = { "toggle", "headText", "ench", "cheap", "wornText", "hintText", "rule" }
 
 local function ItemIcon(id)
     local fn = (C_Item and C_Item.GetItemIconByID) or GetItemIcon
@@ -885,6 +896,7 @@ function UI:SetHeader(r, d)
         r.rule:Hide()
         r.headText:Hide()
         r.ench:Hide()
+        r.cheap:Hide()
         r.wornText:Hide()
         r.hintText:SetText(d.text)
         return
@@ -901,17 +913,26 @@ function UI:SetHeader(r, d)
     local best = d.list and TL.Enchant.Best(d.list, d.slot.key)
     r.wornText:ClearAllPoints()
     r.wornText:SetPoint("RIGHT", -6, 0)
+    local cheap = best and TL.Enchant.Cheap(d.list, d.slot.key)
     if best then
         local info = TL.EnchantDB and TL.EnchantDB[best[1]] or {}
         r.ench.text:SetText(TL.Enchant.COLOR .. TL.Enchant.Short(best[1]) .. "|r")
         r.ench.icon:SetTexture(ItemIcon(info.item) or "Interface\\Icons\\Trade_Engraving")
         r.ench:SetWidth(18 + r.ench.text:GetStringWidth())
         r.ench:Show()
-        r.wornText:SetPoint("LEFT", r.ench, "RIGHT", 10, 0)
     else
         r.ench:Hide()
-        r.wornText:SetPoint("LEFT", r.headText, "RIGHT", 10, 0)
     end
+    if cheap then
+        -- coin + "cheaper:" so it reads as the budget pick, not a second enchant on the same slot
+        r.cheap.text:SetText(GREY .. "cheaper:|r " .. TL.Enchant.CHEAP_COLOR .. TL.Enchant.Short(cheap[1]) .. "|r")
+        r.cheap.icon:SetTexture("Interface\\Icons\\INV_Misc_Coin_01")
+        r.cheap:SetWidth(18 + r.cheap.text:GetStringWidth())
+        r.cheap:Show()
+    else
+        r.cheap:Hide()
+    end
+    r.wornText:SetPoint("LEFT", cheap and r.cheap or best and r.ench or r.headText, "RIGHT", 10, 0)
 end
 
 function UI:SetItem(r, d)

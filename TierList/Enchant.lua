@@ -7,6 +7,7 @@ TL.Enchant = Enchant
 
 local GREY = "|cff9d9d9d"
 Enchant.COLOR = "|cff5fd7c8"
+Enchant.CHEAP_COLOR = "|cffc8b878" -- the cheaper option: muted gold, next to a coin
 
 -- slot -> { {name, effect, hand=, alt=}, ... } for a list, or nil (own lists have none)
 function Enchant.ForList(list)
@@ -55,6 +56,21 @@ function Enchant.Best(list, slotKey)
     return entries[1]
 end
 
+-- The guide's cheaper option for the slot (0.9.4), for the same kind of weapon as the best pick; nil when
+-- the guide names none. Shown next to the best enchant with a coin and "cheaper:".
+function Enchant.Cheap(list, slotKey)
+    local best = Enchant.Best(list, slotKey)
+    if not best then
+        return nil
+    end
+    for _, e in ipairs(Enchant.ForSlot(list, slotKey)) do
+        if e.cheap and e ~= best and e.hand == best.hand then
+            return e
+        end
+    end
+    return nil
+end
+
 -- short form for the header: "Enchant Bracer - Greater Spellpower" -> "Greater Spellpower",
 -- "Enchant 2H Weapon - Spellblasting" -> "Spellblasting (2H)"; items keep their name
 function Enchant.Short(name)
@@ -78,12 +94,14 @@ function Enchant.Link(name)
     return name
 end
 
-function Enchant.Tooltip(tt, list, slotKey)
+-- Tooltip for the enchant shown at the header: `entry` is the best pick (default) or the cheaper one.
+function Enchant.Tooltip(tt, list, slotKey, entry)
     local best = Enchant.Best(list, slotKey)
-    if not best then
+    entry = entry or best
+    if not entry then
         return
     end
-    local name = best[1]
+    local name = entry[1]
     local info = TL.EnchantDB and TL.EnchantDB[name] or {}
     if info.item then
         tt:SetHyperlink("item:" .. info.item)
@@ -94,14 +112,20 @@ function Enchant.Tooltip(tt, list, slotKey)
     end
     local slot = TL.SLOT_BY_KEY[slotKey]
     tt:AddLine(" ")
-    tt:AddLine("|cff33ff99TierList|r best " .. (slot and slot.label:lower() or "") .. " enchant: " ..
-        Enchant.COLOR .. name .. "|r", 1, 1, 1, true)
-    if best[2] then
-        tt:AddLine("  " .. best[2], 0.85, 0.85, 0.85, true)
+    tt:AddLine("|cff33ff99TierList|r " .. (entry.cheap and "cheaper" or "best") .. " " ..
+        (slot and slot.label:lower() or "") .. " enchant: " .. Enchant.COLOR .. name .. "|r", 1, 1, 1, true)
+    if entry[2] then
+        tt:AddLine("  " .. entry[2], 0.85, 0.85, 0.85, true)
     end
     for _, e in ipairs(Enchant.ForSlot(list, slotKey)) do
-        if e ~= best then
-            local tag = e.alt and "Or" or (e.hand == "2H" and "Two-hander" or e.hand == "1H" and "One-hander" or "Also")
+        if e == best and e ~= entry then
+            tt:AddLine("Best: " .. e[1] .. (e[2] and (GREY .. " - " .. e[2] .. "|r") or ""), 0.85, 0.85, 0.85, true)
+        elseif e ~= entry then
+            local kind = e.hand == "2H" and "two-hander" or e.hand == "1H" and "one-hander" or nil
+            local tag = e.cheap and "Cheaper" or e.alt and "Or" or (kind and (kind:gsub("^%l", string.upper))) or "Also"
+            if kind and (e.cheap or e.alt) then
+                tag = tag .. " (" .. kind .. ")"
+            end
             tt:AddLine(tag .. ": " .. e[1] .. (e[2] and (GREY .. " - " .. e[2] .. "|r") or ""), 0.85, 0.85, 0.85, true)
         end
     end

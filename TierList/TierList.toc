@@ -2,7 +2,7 @@
 ## Title: |cff33ff99TierList|r
 ## Notes: Your own S/A/B/C tier lists per gear slot, for any build and character. Shows where items drop, marks them in tooltips and tells you to roll Need. /tl
 ## Author: adminmh-git
-## Version: 0.9.3
+## Version: 0.9.4
 ## X-Website: https://github.com/adminmh-git/TierList
 ## SavedVariables: TierListDB
 ## OptionalDeps: EllesmereUI

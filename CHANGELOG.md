@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.4
+
+- Cheaper enchants. Where a guide names a cheaper option for a slot, it is shown next to the best enchant, with a coin icon and "cheaper:", for example "Subtlety  cheaper: Greater Resistance". It works like the best enchant: hover for details, click to search the Auction House, shift-click to link it. For weapons, the cheaper option matches the weapon type (one-hander or staff).
+- The Discipline Priest list now takes its enchants from ConquestCapped's Discipline Priest enchant guide, which names a best and a cheaper enchant for every slot. Before, they came from Wowhead's gear sets. The cheaper head and legs option is Lesser Arcanum of Voracity (Intellect or Spirit).
+- Cheaper options come from ConquestCapped's guides (Balance Druid and Discipline Priest). The other guides name only one enchant per slot.
+
 ## 0.9.3
 
 - Enchants. Each ready-made list shows the best enchant for each slot next to the slot name, for example "Arcanum of Focus" on Head and Legs. The enchants come from the same guide as the list: Grayston's sheet, Alacor's and Jurdi's videos, the Wowhead guides, ConquestCapped's Balance Druid enchant guide and the wowsims set.
