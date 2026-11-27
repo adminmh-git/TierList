@@ -45,6 +45,7 @@ A character with no list yet gets one ready-made list of its class. All other li
 | Shockadin (Alacor pre-raid) | Paladin, Holy (Shockadin) | Alacor's Shockadin pre-raid BiS video (YouTube) |
 | Shockadin | Paladin, Holy (Shockadin) | wowsims example set |
 | Prot Tank (Jurdi pre-raid) | Paladin, Protection | Jurdi's Prot Paladin pre-raid video (YouTube) |
+| AoE Farm Tank (Jampanos) | Paladin, Protection | Mobalytics "Paladin AoE Farming" by Jampanos |
 | Holy Healer (Wowhead pre-raid) | Paladin, Holy | Wowhead "Holy Paladin Healer Best in Slot Gear" by Harreks |
 | Balance (ConquestCapped pre-raid) | Druid, Balance | ConquestCapped "WoW Forever Balance Druid Pre-Raid BiS" by Kir |
 | Feral Tank (ConquestCapped pre-raid) | Druid, Feral (Bear Tank) | ConquestCapped "WoW Forever Feral Tank Druid Pre-Raid BiS" by Kir |

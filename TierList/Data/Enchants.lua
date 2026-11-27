@@ -4,6 +4,7 @@ local _, TL = ...
 -- enchanter casts it, I = an item you use), ah (Auction House search terms)
 TL.EnchantDB = {
     ["Arcanum of Focus"] = { item = 18330, kind = "I", ah = { "Arcanum of Focus", "Libram of Focus" } },
+    ["Arcanum of Protection"] = { item = 18331, kind = "I", ah = { "Arcanum of Protection", "Libram of Protection" } },
     ["Chromatic Mantle of the Dawn"] = { item = 18182, kind = "I", ah = { "Chromatic Mantle of the Dawn" } },
     ["Enchant 2H Weapon - Agility"] = { item = 22392, spell = 27837, kind = "E", ah = { "Enchant 2H Weapon - Agility" } },
     ["Enchant 2H Weapon - Major Intellect"] = { item = 16249, spell = 20036, kind = "E", ah = { "Enchant 2H Weapon - Major Intellect" } },
@@ -28,7 +29,9 @@ TL.EnchantDB = {
     ["Enchant Bracer - Superior Deflection"] = { item = 249539, spell = 1248665, kind = "E", ah = { "Enchant Bracer - Superior Deflection" } },
     ["Enchant Bracer - Superior Intellect"] = { item = 249538, spell = 1248661, kind = "E", ah = { "Enchant Bracer - Superior Intellect" } },
     ["Enchant Bracer - Superior Strength"] = { item = 16246, spell = 20010, kind = "E", ah = { "Enchant Bracer - Superior Strength" } },
+    ["Enchant Chest - Absorption"] = { item = 249510, kind = "E", ah = { "Enchant Chest - Absorption" } },
     ["Enchant Chest - Greater Stats"] = { item = 16253, spell = 20025, kind = "E", ah = { "Enchant Chest - Greater Stats" } },
+    ["Enchant Chest - Lesser Absorption"] = { item = 273491, kind = "E", ah = { "Enchant Chest - Lesser Absorption" } },
     ["Enchant Chest - Major Intellect"] = { item = 16242, spell = 20028, kind = "E", ah = { "Enchant Chest - Major Intellect" } },
     ["Enchant Chest - Stats"] = { item = 273540, kind = "E", ah = { "Enchant Chest - Stats" } },
     ["Enchant Chest - Superior Intellect"] = { item = 273534, kind = "E", ah = { "Enchant Chest - Superior Intellect" } },
@@ -39,6 +42,7 @@ TL.EnchantDB = {
     ["Enchant Cloak - Resistance"] = { item = 273519, spell = 13794, kind = "E", ah = { "Enchant Cloak - Resistance" } },
     ["Enchant Cloak - Subtlety"] = { item = 20735, spell = 25084, kind = "E", ah = { "Enchant Cloak - Subtlety" } },
     ["Enchant Cloak - Superior Defense"] = { item = 16224, spell = 20015, kind = "E", ah = { "Enchant Cloak - Superior Defense" } },
+    ["Enchant Gloves - Agility"] = { item = 273520, kind = "E", ah = { "Enchant Gloves - Agility" } },
     ["Enchant Gloves - Arcane Power"] = { item = 249534, spell = 1213626, kind = "E", ah = { "Enchant Gloves - Arcane Power" } },
     ["Enchant Gloves - Holy Power"] = { item = 249536, kind = "E", ah = { "Enchant Gloves - Holy Power" } },
     ["Enchant Gloves - Minor Haste"] = { item = 273544, spell = 13948, kind = "E", ah = { "Enchant Gloves - Minor Haste" } },
@@ -63,6 +67,8 @@ TL.EnchantDB = {
     ["Mystic Rugged Armor Kit"] = { item = 252487, kind = "I", ah = { "Mystic Rugged Armor Kit" } },
     ["Mystic Thick Armor Kit"] = { item = 252462, kind = "I", ah = { "Mystic Thick Armor Kit" } },
     ["Rugged Armor Kit"] = { item = 15564, kind = "I", ah = { "Rugged Armor Kit" } },
+    ["Steel Weapon Chain"] = { item = 6041, kind = "I", ah = { "Steel Weapon Chain" } },
+    ["Thorium Shield Spike"] = { item = 12645, kind = "I", ah = { "Thorium Shield Spike" } },
     ["Wild Leather Armor Kit"] = { item = 279258, kind = "I", ah = { "Wild Leather Armor Kit" } },
 }
 
@@ -146,6 +152,19 @@ TL.SeedEnchants = {
         FEET = { { "Enchant Boots - Greater Stamina", "Stamina +7" }, { "Enchant Boots - Stamina", "5 Stamina instead of 7", alt = true, cheap = true, own = true } },
         MAINHAND = { { "Enchant Weapon - Crusader", "on the weapons in his comparison" } },
         OFFHAND = { { "Enchant Shield - Lesser Block", "Blocking +2%" } },
+    },
+    ["mobalytics-paladin-aoe-farm"] = {
+        source = "Jampanos' Mobalytics guide (the enchants in his gear set)",
+        HEAD = { { "Arcanum of Protection" } },
+        NECK = { { "Enchant Necklace - Deflection" } },
+        BACK = { { "Enchant Cloak - Agility" }, { "Enchant Cloak - Lesser Agility", "3 Agility instead of 5", alt = true, cheap = true, own = true } },
+        CHEST = { { "Enchant Chest - Absorption" }, { "Enchant Chest - Lesser Absorption", "absorbs damage on 5% of hits instead of 25%", alt = true, cheap = true, own = true } },
+        WRIST = { { "Enchant Bracer - Superior Deflection" }, { "Enchant Bracer - Deflection", "the guide's cheaper option", alt = true, cheap = true } },
+        HANDS = { { "Enchant Gloves - Agility" } },
+        LEGS = { { "Arcanum of Protection" } },
+        FEET = { { "Enchant Boots - Speed" }, { "Enchant Boots - Minor Speed", "the smaller run speed enchant", alt = true, cheap = true, own = true } },
+        MAINHAND = { { "Steel Weapon Chain", "REQUIRED in most cases, disarms are lethal" } },
+        OFFHAND = { { "Thorium Shield Spike", "damage reflection when you block" } },
     },
     ["wowhead-disc-preraid"] = {
         source = "ConquestCapped Discipline Priest Enchants guide",

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.7
+
+- New Paladin list "AoE Farm Tank (Jampanos)" with 33 items, from Jampanos' "Paladin AoE Farming" guide on Mobalytics. It is for the Protection build that pulls whole low level dungeons, such as SM Armory and Cathedral. The build kills mobs with damage reflection and Consecration and lives on passive healing.
+- S is his gear set plus the items he marks as key: the Krol'dok Warplate 4-set, Demon Forged Breastplate, Girdle of Extracted Answers and Uther's Strength. Hand of Edward the Odd is S too, because he calls it the obvious weapon, but it is very expensive. A is the alternatives he names for a slot. B is his other trinket options and the shields he says have a catch. C is the low level reflect shields that cost too much armor.
+- The item notes give his tips, for example "you want a SLOW weapon" and "carry several shields, they break very fast".
+- Enchants from his gear set: Arcanum of Protection on head and legs, Deflection on the necklace, Superior Deflection on the bracers, Absorption on the chest, Agility on the cloak and gloves, Speed on the boots, Steel Weapon Chain on the weapon and Thorium Shield Spike on the shield. The cheaper bracer enchant (Deflection) is his. TierList picks the cheaper chest (Lesser Absorption), cloak (Lesser Agility) and boots (Minor Speed) enchants.
+- The list is not ticked for any character. Tick it in the **List** menu to use it.
+
 ## 0.9.6
 
 - Two new Druid lists from ConquestCapped's guides by Kir: "Feral Tank (ConquestCapped pre-raid)" with 56 items, for the Bear Tank build, and "Feral Cat (ConquestCapped pre-raid)" with 75 items. As in the Balance list, the BiS set is S, the realistic set A, and the other options follow the guide's order. Neither list is ticked for any character. Tick them in the **List** menu to use them.
