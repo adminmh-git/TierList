@@ -311,6 +311,10 @@ local function Recheck(quiet)
     if cur and before and cur ~= before and not quiet then
         TL.Print(Spec.Describe())
     end
+    if cur and TL.db.seedsDone then
+        -- the lists that wait for the talent tree (activate = "spec", 0.9.8) can be handed out now
+        TL:ApplySeeds()
+    end
     TL:Changed()
 end
 Spec.Recheck = Recheck

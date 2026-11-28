@@ -2,7 +2,7 @@
 -- Core: saved data, lists, item facts, equipped/owned state, upgrade logic, events, slash commands.
 local ADDON, TL = ...
 _G.TierList = TL
-TL.VERSION = "0.9.7"
+TL.VERSION = "0.9.8"
 BINDING_HEADER_TIERLIST = "TierList"
 BINDING_NAME_TIERLIST_TOGGLE = "Open / close TierList"
 
@@ -558,8 +558,11 @@ function TL:EnsureActive()
             return
         end
     end
+    -- not a list that waits for the talent tree (0.9.8): without this a new Shaman got the Shaman list
+    -- that sorts first (Elemental), whatever the spec
+    local waits = self:SpecSeedIds()
     for _, l in ipairs(self:SortedLists()) do
-        if l.class == self.playerClass and next(l.chars) == nil then
+        if l.class == self.playerClass and next(l.chars) == nil and not (l.seedId and waits[l.seedId]) then
             l.chars[self.charKey] = true
             self:SetActiveList(l.id)
             return
@@ -657,6 +660,28 @@ function TL:FixShownLists()
     end
 end
 
+-- Seeds with activate = "spec" (0.9.8, the three Shaman lists: one per talent tree) wait until the talents
+-- are readable (about 2 s after login, Spec.Recheck runs ApplySeeds again); then only the list of the
+-- character's tree becomes its active list, the others stay in the List menu.
+function TL:SpecSeedReady(seed)
+    if seed.activate ~= "spec" then
+        return true
+    end
+    local cur = self.Spec and self.Spec.Current()
+    return cur ~= nil and self.Spec.TreeOf(seed.spec) == cur
+end
+
+-- seed ids of the lists EnsureActive must not hand out on its own (see SpecSeedReady)
+function TL:SpecSeedIds()
+    local ids = {}
+    for _, seed in ipairs(self.Seeds or {}) do
+        if seed.id and seed.activate == "spec" then
+            ids[seed.id] = true
+        end
+    end
+    return ids
+end
+
 function TL:ApplySeeds()
     if not self.Seeds then
         return
@@ -698,7 +723,7 @@ function TL:ApplySeeds()
         -- uses an older seed list (or none); switching back later is respected
         local done = seed.id and self.db.seedsDone[seed.id]
         local list = done and self:GetList(done.list)
-        if list and (seed.activate or seed.assign) and seed.class == self.playerClass then
+        if list and (seed.activate or seed.assign) and seed.class == self.playerClass and self:SpecSeedReady(seed) then
             done.chars = done.chars or {}
             if not done.chars[self.charKey] then
                 done.chars[self.charKey] = true

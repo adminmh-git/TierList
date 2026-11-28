@@ -37,7 +37,7 @@ The look follows EllesmereUI if you use it, and falls back to a plain flat style
 
 ## Included lists
 
-A character with no list yet gets one ready-made list of its class. All other lists are in the **List** menu: tick one to use it.
+A character with no list yet gets one ready-made list of its class (a Shaman gets the one for their talent tree). All other lists are in the **List** menu: tick one to use it.
 
 | List | Class / spec | Source |
 | --- | --- | --- |
@@ -51,6 +51,9 @@ A character with no list yet gets one ready-made list of its class. All other li
 | Feral Tank (ConquestCapped pre-raid) | Druid, Feral (Bear Tank) | ConquestCapped "WoW Forever Feral Tank Druid Pre-Raid BiS" by Kir |
 | Feral Cat (ConquestCapped pre-raid) | Druid, Feral | ConquestCapped "WoW Forever Feral Druid Pre-Raid BiS" by Kir |
 | Discipline (Wowhead pre-raid) | Priest, Discipline | Wowhead "Discipline Priest Healer Best in Slot Gear" by Voulk |
+| Enhancement (ConquestCapped pre-raid) | Shaman, Enhancement | ConquestCapped "WoW Forever Enhancement Shaman Pre-Raid BiS" by Kir |
+| Elemental (ConquestCapped pre-raid) | Shaman, Elemental | ConquestCapped "WoW Forever Elemental Shaman Pre-Raid BiS" by Kir |
+| Resto Shaman (ConquestCapped pre-raid) | Shaman, Restoration | ConquestCapped "WoW Forever Restoration Shaman Pre-Raid BiS" by Kir |
 
 Tiers follow each guide's own ranking. The item notes in tooltips quote the guide.
 

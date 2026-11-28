@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.8
+
+- Three new Shaman lists from ConquestCapped's guides by Kir: "Enhancement (ConquestCapped pre-raid)" with 104 items, "Elemental (ConquestCapped pre-raid)" with 82 items and "Resto Shaman (ConquestCapped pre-raid)" with 63 items. As in the Druid lists, the BiS set is S, the realistic set A, and the other options follow the guide's order. Where Horde and Alliance have their own version of an item (for example Darkspear and Theramore reputation gear), both are on the list.
+- Enhancement uses a two-hander (Forest Defender's Axe as BiS, Hammer of Thundering Hooves in the realistic set). Elemental and Resto use a one-hander and an off hand (Witchblade with Draconian Aegis of the Legion, Gift of the Elven Magi with Penelope's Rose).
+- A Shaman with no list yet gets the list for their talent tree as soon as the talents can be read, about two seconds after login. The other two lists are in the **List** menu. If TierList cannot read your talents, `/tl spec enhancement` (or `elemental`, `restoration`) sets the tree by hand.
+- Enchants from ConquestCapped's Shaman enchant guides. The Elemental and Restoration guides name a cheaper option for every slot. The Enhancement guide names alternatives instead, which the hover shows as "Or", for example Insight, Crusader or 2H Strength instead of Revelation on the weapon. Where an alternative is the cheaper version of the same slot, it is the cheaper option: Lesser Arcanum of Voracity (Strength) instead of Arcanum of Rapidity on the head, and Forceful Rugged Armor Kit on the legs and feet. For the cloak, chest, bracers and gloves, TierList picks the cheaper enchant itself.
+
 ## 0.9.7
 
 - New Paladin list "AoE Farm Tank (Jampanos)" with 33 items, from Jampanos' "Paladin AoE Farming" guide on Mobalytics. It is for the Protection build that pulls whole low level dungeons, such as SM Armory and Cathedral. The build kills mobs with damage reflection and Consecration and lives on passive healing.
