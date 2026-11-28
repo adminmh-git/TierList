@@ -205,6 +205,9 @@ local function Dialog(name, w, h, title)
     return f
 end
 
+-- the helpers for the other UI files (WeightsUI.lua, 0.9.9)
+UI.Btn, UI.Label, UI.Tip, UI.Dialog = Btn, Label, Tip, Dialog
+
 -- ---------------------------------------------------------------------------
 -- Small popup menu
 -- ---------------------------------------------------------------------------
@@ -471,8 +474,13 @@ function UI:Create()
     end
     title:SetText("TierList " .. GREY .. TL.VERSION .. "|r")
 
+    -- everything of the list view sits in one container, so the Stat weights tab can swap it out (0.9.9)
+    local lv = CreateFrame("Frame", nil, f)
+    lv:SetAllPoints(f)
+    self.listView = lv
+
     -- row 1: list + actions
-    local listBtn = Btn(f, "List", 180)
+    local listBtn = Btn(lv, "List", 180)
     listBtn:SetPoint("TOPLEFT", 14, -30)
     listBtn:SetScript("OnClick", function(self) UI:ShowListMenu(self) end)
     -- a long list name stays inside the button, cut with "..." (0.9.3); hovering shows the whole name
@@ -497,11 +505,11 @@ function UI:Create()
     end)
     listBtn:HookScript("OnLeave", function() GameTooltip:Hide() end)
     self.listBtn = listBtn
-    local newBtn = Btn(f, "New", 58)
+    local newBtn = Btn(lv, "New", 58)
     newBtn:SetPoint("LEFT", listBtn, "RIGHT", 6, 0)
     newBtn:SetScript("OnClick", function() UI:ShowEdit(nil) end)
     Tip(newBtn, "New list", "Make a new tier list, for example for another build or another character.")
-    local editBtn = Btn(f, "Edit", 58)
+    local editBtn = Btn(lv, "Edit", 58)
     editBtn:SetPoint("LEFT", newBtn, "RIGHT", 4, 0)
     editBtn:SetScript("OnClick", function()
         local list = TL:GetActiveList()
@@ -510,24 +518,24 @@ function UI:Create()
         end
     end)
     Tip(editBtn, "Edit list", "Name, build, class and which characters use this list.")
-    local importBtn = Btn(f, "Import", 70)
+    local importBtn = Btn(lv, "Import", 70)
     importBtn:SetPoint("LEFT", editBtn, "RIGHT", 4, 0)
     importBtn:SetScript("OnClick", function() UI:ShowImport() end)
     Tip(importBtn, "Import", "Paste a TierList string, a wowsims or Sixty Upgrades export, Wowhead links, item IDs or item names.")
-    local exportBtn = Btn(f, "Export", 70)
+    local exportBtn = Btn(lv, "Export", 70)
     exportBtn:SetPoint("LEFT", importBtn, "RIGHT", 4, 0)
     exportBtn:SetScript("OnClick", function() UI:ShowExport() end)
     Tip(exportBtn, "Export", "Copy this list as a string for friends or as plain text.")
-    local fillBtn = Btn(f, "Fill", 52)
+    local fillBtn = Btn(lv, "Fill", 52)
     fillBtn:SetPoint("LEFT", exportBtn, "RIGHT", 4, 0)
     fillBtn:SetScript("OnClick", function() UI:ShowFill() end)
     Tip(fillBtn, "Fill from GearQuest", "Add GearQuest Forever's ranked level-60 items for a spec to every slot (A/B/C below your own picks). Choose sources (dungeons, crafted, no PvP, ...) and quality.")
-    local optBtn = Btn(f, "Options", 76)
+    local optBtn = Btn(lv, "Options", 76)
     optBtn:SetPoint("LEFT", fillBtn, "RIGHT", 4, 0)
     optBtn:SetScript("OnClick", function(self) UI:ShowOptionsMenu(self) end)
 
     -- row 2: search + scope
-    local search = CreateFrame("EditBox", nil, f, "SearchBoxTemplate")
+    local search = CreateFrame("EditBox", nil, lv, "SearchBoxTemplate")
     search:SetSize(250, 20)
     search:SetPoint("TOPLEFT", 20, -60)
     search:SetAutoFocus(false)
@@ -540,14 +548,14 @@ function UI:Create()
         UI:Refresh()
     end)
     self.search = search
-    local scopeList = Btn(f, "This list", 84)
+    local scopeList = Btn(lv, "This list", 84)
     scopeList:SetPoint("LEFT", search, "RIGHT", 8, 0)
     scopeList:SetScript("OnClick", function()
         UI.scope = "list"
         UI:Refresh()
     end)
     Tip(scopeList, "Search this list", "Filter the items of the active list.")
-    local scopeAll = Btn(f, "All items", 84)
+    local scopeAll = Btn(lv, "All items", 84)
     scopeAll:SetPoint("LEFT", scopeList, "RIGHT", 4, 0)
     scopeAll:SetScript("OnClick", function()
         UI.scope = "all"
@@ -556,14 +564,14 @@ function UI:Create()
     end)
     Tip(scopeAll, "Search all items", "Search every WoW Forever item TierList knows, then add it with + (uses the tier picked at the bottom).")
     self.scopeList, self.scopeAll = scopeList, scopeAll
-    local info = Label(f, "", "GameFontDisableSmall")
+    local info = Label(lv, "", "GameFontDisableSmall")
     info:SetPoint("LEFT", scopeAll, "RIGHT", 10, 0)
     info:SetPoint("RIGHT", f, "RIGHT", -16, 0)
     info:SetJustifyH("RIGHT")
     self.info = info
 
     -- list area
-    local sf = CreateFrame("ScrollFrame", "TierListScroll", f, "UIPanelScrollFrameTemplate")
+    local sf = CreateFrame("ScrollFrame", "TierListScroll", lv, "UIPanelScrollFrameTemplate")
     sf:SetPoint("TOPLEFT", 12, -88)
     sf:SetPoint("BOTTOMRIGHT", -32, 48)
     Skin.Apply("ScrollBar", sf.ScrollBar or _G.TierListScrollScrollBar)
@@ -576,7 +584,7 @@ function UI:Create()
     content:SetScript("OnMouseUp", function() DropOnto(nil) end)
 
     -- bottom: add bar
-    local addBox = Input(f, 270)
+    local addBox = Input(lv, 270)
     addBox:SetPoint("BOTTOMLEFT", 22, 16)
     Placeholder(addBox, "Item link, ID or name (Shift-click / drag an item)")
     addBox:SetScript("OnEnterPressed", function(self)
@@ -594,12 +602,12 @@ function UI:Create()
         end
     end)
     self.addBox = addBox
-    local tierLabel = Label(f, "Tier", "GameFontNormalSmall")
+    local tierLabel = Label(lv, "Tier", "GameFontNormalSmall")
     tierLabel:SetPoint("LEFT", addBox, "RIGHT", 10, 0)
     self.tierPick = {}
     local prev = tierLabel
     for _, t in ipairs(TL.TIERS) do
-        local b = TierButton(f, 22)
+        local b = TierButton(lv, 22)
         b:SetPoint("LEFT", prev, "RIGHT", 4, 0)
         b:SetScript("OnClick", function()
             UI.addTier = t
@@ -609,7 +617,7 @@ function UI:Create()
         self.tierPick[t] = b
         prev = b
     end
-    local addBtn = Btn(f, "Add", 56)
+    local addBtn = Btn(lv, "Add", 56)
     addBtn:SetPoint("LEFT", prev, "RIGHT", 8, 0)
     addBtn:SetScript("OnClick", function()
         if TL:AddFromText(addBox:GetText(), UI.addTier) then
@@ -618,7 +626,7 @@ function UI:Create()
         addBox:ClearFocus()
     end)
     -- does the shown list count for this character? (0.9.1: showing a list no longer decides that)
-    local use = CreateFrame("CheckButton", nil, f, "UICheckButtonTemplate")
+    local use = CreateFrame("CheckButton", nil, lv, "UICheckButtonTemplate")
     use:SetSize(22, 22)
     use:SetPoint("LEFT", addBtn, "RIGHT", 12, 0)
     Skin.Apply("Checkbox", use)
@@ -640,6 +648,9 @@ function UI:Create()
     use:SetScript("OnLeave", function() GameTooltip:Hide() end)
     self.useCheck = use
     Tip(addBox, "Add an item", "Type a name, ID or item link, or Shift-click / drag an item here. Right-click a row in the list for tier, move, copy and remove.")
+    if self.CreateTabs then
+        self:CreateTabs()
+    end
     self:UpdateTierPick()
     f:Hide()
     return f
@@ -1048,6 +1059,9 @@ function UI:Refresh()
     local f = self.frame
     if not f or not f:IsShown() then
         return
+    end
+    if self.view == "weights" and self.RefreshWeights then
+        self:RefreshWeights()
     end
     local list = TL:GetActiveList()
     self.listBtn:SetText(list and ("List: " .. TL:ListName(list)) or "List: (none)")

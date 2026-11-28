@@ -2,7 +2,7 @@
 -- Core: saved data, lists, item facts, equipped/owned state, upgrade logic, events, slash commands.
 local ADDON, TL = ...
 _G.TierList = TL
-TL.VERSION = "0.9.8"
+TL.VERSION = "0.9.9"
 BINDING_HEADER_TIERLIST = "TierList"
 BINDING_NAME_TIERLIST_TOGGLE = "Open / close TierList"
 
@@ -1697,6 +1697,7 @@ local function Help()
         "/tl undo - bring back the last removed item(s)",
         "/tl fill <spec> [count] - add GearQuest's level-60 picks per slot, /tl unfill - remove them",
         "/tl spec - your talent tree and which lists are main spec / offspec; /tl spec <name> | auto",
+        "/tl weights - stat weights and stat priorities of every class and spec (also the tab below the window)",
         "/tl test - show a test alert",
         "/tl minimap - show or hide the minimap button",
         "/tl version - your version and whether a newer one is out",
@@ -1803,6 +1804,10 @@ SlashCmdList["TIERLIST"] = function(msg)
         end
         TL.Spec.Recheck(true)
         TL.Print(TL.Spec.Describe())
+    elseif cmd == "weights" or cmd == "stats" then
+        if TL.UI and TL.UI.ShowWeights then
+            TL.UI:ShowWeights()
+        end
     elseif cmd == "test" then
         if TL.Alerts then
             TL.Alerts:Test()

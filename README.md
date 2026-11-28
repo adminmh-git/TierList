@@ -29,6 +29,7 @@ New versions then appear under **My Addons** like any other addon. Click **Updat
 - **Loot alerts.** When an item from your list drops in a group, a banner tells you to roll Need. Offspec lists say "Greed" instead.
 - **Main spec and offspec.** Each list can be tied to a talent tree. Edit the list to set this, and use `/tl spec` to check what the addon detected.
 - **Fill.** Adds GearQuest's ranked level-60 picks per slot to a list. You can filter them by source and quality.
+- **Stat weights.** The tab below the window (or `/tl weights`) shows what each class and spec values on gear: the guides' stat priorities (ConquestCapped, Grayston) next to GearQuest's weights, which Fill ranks by.
 - **Import and export.** Lists can be shared as text. `/tl import` also reads wowsims gear and Sixty Upgrades sets.
 - `/tl version` shows your version. TierList users in the same group or guild tell each other their versions, so an old copy prints once that a newer one is out.
 - `/tl help` lists all commands.

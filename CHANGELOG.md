@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.9
+
+- New **Stat weights** tab below the window (or `/tl weights`). It shows what every class and spec values on gear: pick a class at the top, then a spec. The guide's stat priority is on the left and GearQuest's weights on the right, so you can compare them.
+- Guide data: ConquestCapped's stat priority pages by Kir for Balance, Feral, Feral Tank, Discipline, Elemental, Enhancement and Restoration Shaman. These name an order of stats, most important first, with no numbers. Hover a stat to see why it is where it is. Grayston's sheet gives real EP numbers for the 2H Shockadin, where 1 EP = 1 Attack Power, including the error he reports for each number. Specs with guide data have a star on their button.
+- GearQuest's weights cover every class and spec. TierList's **Fill** ranks items by these same weights, so the tab also shows what the A/B/C picks are based on. Numbers are split into "per point" and "per 1 %" (Hit, Crit, Haste, Expertise, Dodge, Parry, Block), each with a bar.
+- The tab opens on the class and spec of the list you are looking at.
+
 ## 0.9.8
 
 - Three new Shaman lists from ConquestCapped's guides by Kir: "Enhancement (ConquestCapped pre-raid)" with 104 items, "Elemental (ConquestCapped pre-raid)" with 82 items and "Resto Shaman (ConquestCapped pre-raid)" with 63 items. As in the Druid lists, the BiS set is S, the realistic set A, and the other options follow the guide's order. Where Horde and Alliance have their own version of an item (for example Darkspear and Theramore reputation gear), both are on the list.
